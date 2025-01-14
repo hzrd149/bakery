@@ -1,0 +1,3 @@
+[submodule "nostrudel"]
+	path = nostrudel
+	url = https://github.com/hzrd149/nostrudel.git
