@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import process from "node:process";
 import path from "node:path";
-import pfs from "fs/promises";
 
 import express, { Request } from "express";
 import { mkdirp } from "mkdirp";
@@ -50,7 +49,7 @@ app.express.get("/", (req, res, next) => {
   if (!app.config.data.owner) {
     logger("Redirecting to setup view");
 
-    const url = new URL("/setup", req.protocol + "://" + req.headers["host"]);
+    const url = new URL("/bakery/setup", req.protocol + "://" + req.headers["host"]);
     const relay = getPublicRelayAddressFromRequest(req);
     url.searchParams.set("relay", relay.toString());
     res.redirect(url.toString());
