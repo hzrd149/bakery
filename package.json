@@ -1,5 +1,5 @@
 {
-  "name": "bakery",
+  "name": "nostrudel-bakery",
   "version": "0.1.0",
   "description": "A relay backend for noStrudel",
   "type": "module",
