@@ -1,5 +1,5 @@
-declare module 'streamx' {
-	import { Duplex, Stream } from 'stream';
+declare module "streamx" {
+  import { Duplex, Stream } from "stream";
 
-	export function pipeline(...streams: Stream[]): Duplex;
+  export function pipeline(...streams: Stream[]): Duplex;
 }

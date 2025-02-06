@@ -7,7 +7,7 @@ import { kinds } from "nostr-tools";
 import { AbstractRelay } from "nostr-tools/abstract-relay";
 import express, { Express } from "express";
 import { EventEmitter } from "events";
-import { SimpleSigner } from "applesauce-signer/signers/simple-signer";
+import { SimpleSigner } from "applesauce-signers/signers/simple-signer";
 import cors from "cors";
 
 import { logger } from "../logger.js";

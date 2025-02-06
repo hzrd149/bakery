@@ -1,12 +1,12 @@
-import { ReportArguments } from '@satellite-earth/core/types';
-import { EventRow, parseEventRow } from '@satellite-earth/core';
-import Report from '../report.js';
+import { ReportArguments } from "@satellite-earth/core/types";
+import { EventRow, parseEventRow } from "@satellite-earth/core";
+import Report from "../report.js";
 
-export default class EventsSummaryReport extends Report<'EVENTS_SUMMARY'> {
-	readonly type = 'EVENTS_SUMMARY';
+export default class EventsSummaryReport extends Report<"EVENTS_SUMMARY"> {
+  readonly type = "EVENTS_SUMMARY";
 
-	async execute(args: ReportArguments['EVENTS_SUMMARY']): Promise<void> {
-		let sql = `
+  async execute(args: ReportArguments["EVENTS_SUMMARY"]): Promise<void> {
+    let sql = `
 			SELECT
 				events.*,
 				COUNT(l.id) AS reactions,
@@ -20,50 +20,50 @@ export default class EventsSummaryReport extends Report<'EVENTS_SUMMARY'> {
 			LEFT JOIN events AS r ON r.id = tags.e AND r.kind = 1
 		`;
 
-		const params: any[] = [];
-		const conditions: string[] = [];
+    const params: any[] = [];
+    const conditions: string[] = [];
 
-		if (args.kind !== undefined) {
-			conditions.push(`events.kind = ?`);
-			params.push(args.kind);
-		}
-		if (args.pubkey !== undefined) {
-			conditions.push(`events.pubkey = ?`);
-			params.push(args.pubkey);
-		}
+    if (args.kind !== undefined) {
+      conditions.push(`events.kind = ?`);
+      params.push(args.kind);
+    }
+    if (args.pubkey !== undefined) {
+      conditions.push(`events.pubkey = ?`);
+      params.push(args.pubkey);
+    }
 
-		if (conditions.length > 0) {
-			sql += ` WHERE ${conditions.join(' AND ')}\n`;
-		}
+    if (conditions.length > 0) {
+      sql += ` WHERE ${conditions.join(" AND ")}\n`;
+    }
 
-		sql += ' GROUP BY events.id\n';
+    sql += " GROUP BY events.id\n";
 
-		switch (args.order) {
-			case 'created_at':
-				sql += ` ORDER BY events.created_at DESC\n`;
-				break;
-			default:
-			case 'interactions':
-				sql += ` ORDER BY reactions + shares + replies DESC\n`;
-				break;
-		}
+    switch (args.order) {
+      case "created_at":
+        sql += ` ORDER BY events.created_at DESC\n`;
+        break;
+      default:
+      case "interactions":
+        sql += ` ORDER BY reactions + shares + replies DESC\n`;
+        break;
+    }
 
-		let limit = args.limit || 100;
-		sql += ` LIMIT ?`;
-		params.push(limit);
+    let limit = args.limit || 100;
+    sql += ` LIMIT ?`;
+    params.push(limit);
 
-		const rows = await this.app.database.db
-			.prepare<any[], EventRow & { reactions: number; shares: number; replies: number }>(sql)
-			.all(...params);
+    const rows = await this.app.database.db
+      .prepare<any[], EventRow & { reactions: number; shares: number; replies: number }>(sql)
+      .all(...params);
 
-		const results = rows.map((row) => {
-			const event = parseEventRow(row);
+    const results = rows.map((row) => {
+      const event = parseEventRow(row);
 
-			return { event, reactions: row.reactions, shares: row.shares, replies: row.replies };
-		});
+      return { event, reactions: row.reactions, shares: row.shares, replies: row.replies };
+    });
 
-		for (const result of results) {
-			this.send(result);
-		}
-	}
+    for (const result of results) {
+      this.send(result);
+    }
+  }
 }
