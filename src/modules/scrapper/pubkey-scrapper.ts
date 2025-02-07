@@ -3,7 +3,6 @@ import { NostrEvent } from "nostr-tools";
 import { EventEmitter } from "events";
 import { Debugger } from "debug";
 
-import { getOutboxes } from "@satellite-earth/core/helpers/nostr/mailboxes.js";
 import PubkeyRelayScrapper, { PubkeyRelayScrapperState } from "./pubkey-relay-scrapper.js";
 import { logger } from "../../logger.js";
 
@@ -39,9 +38,7 @@ export default class PubkeyScrapper extends EventEmitter<EventMap> {
   async loadNext() {
     const { mailboxes } = await this.ensureData();
 
-    const outboxes = getOutboxes(mailboxes);
-
-    const relays = [...outboxes, ...this.additionalRelays];
+    const relays = [...(mailboxes?.outboxes ?? []), ...this.additionalRelays];
     const scrappers: PubkeyRelayScrapper[] = [];
     for (const url of relays) {
       if (this.failed.has(url)) continue;

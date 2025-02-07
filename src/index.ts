@@ -4,13 +4,12 @@ import process from "node:process";
 import path from "node:path";
 
 import express, { Request } from "express";
-import { mkdirp } from "mkdirp";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration.js";
 import localizedFormat from "dayjs/plugin/localizedFormat.js";
 
 import App from "./app/index.js";
-import { DATA_PATH, PUBLIC_ADDRESS } from "./env.js";
+import { PUBLIC_ADDRESS } from "./env.js";
 import { addListener, logger } from "./logger.js";
 import { pathExists } from "./helpers/fs.js";
 
@@ -19,8 +18,7 @@ dayjs.extend(duration);
 dayjs.extend(localizedFormat);
 
 // create app
-await mkdirp(DATA_PATH);
-const app = new App(DATA_PATH);
+const app = new App();
 
 // connect logger to app LogStore
 addListener(({ namespace }, ...args) => {

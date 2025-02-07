@@ -1,4 +1,5 @@
-import "dotenv/config.js";
+import "dotenv/config";
+import { mkdirp } from "mkdirp";
 import { OUTBOUND_PROXY_TYPES } from "./const.js";
 
 import { safeRelayUrls } from "applesauce-core/helpers";
@@ -7,6 +8,8 @@ import { normalizeToHexPubkey } from "./helpers/nip19.js";
 export const OWNER_PUBKEY = process.env.OWNER_PUBKEY ? normalizeToHexPubkey(process.env.OWNER_PUBKEY) : undefined;
 export const PUBLIC_ADDRESS = process.env.PUBLIC_ADDRESS;
 export const DATA_PATH = process.env.DATA_PATH || "./data";
+await mkdirp(DATA_PATH);
+
 export const PORT = parseInt(process.env.PORT ?? "") || 3000;
 
 // I2P config
@@ -30,4 +33,6 @@ export const BOOTSTRAP_RELAYS = process.env.BOOTSTRAP_RELAYS
 
 export const COMMON_CONTACT_RELAYS = process.env.COMMON_CONTACT_RELAYS
   ? safeRelayUrls(process.env.COMMON_CONTACT_RELAYS.split(","))
-  : safeRelayUrls(["wss://purplepag.es", "wss://user.kindpag.es", "wss://relay.nos.social"]);
+  : safeRelayUrls(["wss://purplepag.es", "wss://user.kindpag.es"]);
+
+export const IS_DEV = process.env.NODE_ENV === "development";

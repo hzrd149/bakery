@@ -1,40 +1,35 @@
-import { NostrEvent, kinds } from "nostr-tools";
-import _throttle from "lodash.throttle";
+import { tap } from "rxjs";
+import { kinds } from "nostr-tools";
+import { getObservableValue } from "applesauce-core/observable";
+import { ProfileQuery } from "applesauce-core/queries";
 
 import { COMMON_CONTACT_RELAYS } from "../env.js";
 import { logger } from "../logger.js";
-import App from "../app/index.js";
-import PubkeyBatchLoader from "./pubkey-batch-loader.js";
+import { replaceableLoader } from "../services/loaders.js";
+import { eventStore, queryStore } from "../services/stores.js";
+import { simpleTimeout } from "../operators/simple-timeout.js";
+import { arrayFallback } from "../helpers/array.js";
+
+const DEFAULT_REQUEST_TIMEOUT = 10_000;
 
 /** loads kind 0 metadata for pubkeys */
 export default class ProfileBook {
   log = logger.extend("ProfileBook");
-  app: App;
-  loader: PubkeyBatchLoader;
-  extraRelays = COMMON_CONTACT_RELAYS;
-
-  constructor(app: App) {
-    this.app = app;
-
-    this.loader = new PubkeyBatchLoader(kinds.Metadata, this.app.pool, (pubkey) => {
-      return this.app.eventStore.getEventsForFilters([{ kinds: [kinds.Metadata], authors: [pubkey] }])?.[0];
-    });
-
-    this.loader.on("event", (event) => this.app.eventStore.addEvent(event));
-    this.loader.on("batch", (found, failed) => {
-      this.log(`Found ${found}, failed ${failed}, pending ${this.loader.queue}`);
-    });
-  }
 
   getProfile(pubkey: string) {
-    return this.loader.getEvent(pubkey);
+    return eventStore.getReplaceable(kinds.Metadata, pubkey);
   }
 
-  handleEvent(event: NostrEvent) {
-    this.loader.handleEvent(event);
-  }
+  async loadProfile(pubkey: string, relays?: string[], force?: boolean) {
+    relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
+    this.log(`Requesting profile from ${relays.length} relays for ${pubkey}`);
+    replaceableLoader.next({ kind: kinds.Metadata, pubkey, relays, force });
 
-  async loadProfile(pubkey: string, relays: string[] = []) {
-    return this.loader.getOrLoadEvent(pubkey, relays);
+    return getObservableValue(
+      queryStore.createQuery(ProfileQuery, pubkey).pipe(
+        simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load profile for ${pubkey}`),
+        tap((p) => p && this.log(`Found profile for ${pubkey}`, p)),
+      ),
+    );
   }
 }

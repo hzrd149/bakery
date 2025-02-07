@@ -1,13 +1,12 @@
-import path from "path";
 import { WebSocketServer } from "ws";
 import { createServer, Server } from "http";
+import { SimpleSigner } from "applesauce-signers/signers/simple-signer";
 import { IEventStore, NostrRelay, SQLiteEventStore } from "@satellite-earth/core";
 import { getDMRecipient } from "@satellite-earth/core/helpers/nostr";
 import { kinds } from "nostr-tools";
 import { AbstractRelay } from "nostr-tools/abstract-relay";
 import express, { Express } from "express";
 import { EventEmitter } from "events";
-import { SimpleSigner } from "applesauce-signers/signers/simple-signer";
 import cors from "cors";
 
 import { logger } from "../logger.js";
@@ -44,6 +43,12 @@ import SecretsManager from "../modules/secrets-manager.js";
 import outboundNetwork, { OutboundNetworkManager } from "../modules/network/outbound/index.js";
 import Switchboard from "../modules/switchboard/switchboard.js";
 import Gossip from "../modules/gossip.js";
+import database from "../services/database.js";
+import secrets from "../services/secrets.js";
+import config from "../services/config.js";
+import logStore from "../services/log-store.js";
+import stateManager from "../services/state.js";
+import eventCache from "../services/event-cache.js";
 
 type EventMap = {
   listening: [];
@@ -81,14 +86,12 @@ export default class App extends EventEmitter<EventMap> {
   switchboard: Switchboard;
   gossip: Gossip;
 
-  constructor(dataPath: string) {
+  constructor() {
     super();
 
-    this.config = new ConfigManager(path.join(dataPath, "node.json"));
-    this.config.read();
+    this.config = config;
 
-    this.secrets = new SecretsManager(path.join(dataPath, "secrets.json"));
-    this.secrets.read();
+    this.secrets = secrets;
 
     this.signer = new SimpleSigner(this.secrets.get("nostrKey"));
 
@@ -131,15 +134,13 @@ export default class App extends EventEmitter<EventMap> {
       headers.push("Access-Control-Allow-Origin: *");
     });
 
-    // Init embedded sqlite database
-    this.database = new Database({ directory: dataPath });
+    // Init sqlite database
+    this.database = database;
 
     // create log managers
-    this.logStore = new LogStore(this.database.db);
-    this.logStore.setup();
+    this.logStore = logStore;
 
-    this.state = new ApplicationStateManager(this.database.db);
-    this.state.setup();
+    this.state = stateManager;
 
     // Recognize local relay by matching auth string
     this.pool = new CautiousPool((relay: AbstractRelay, challenge: string) => {
@@ -150,17 +151,16 @@ export default class App extends EventEmitter<EventMap> {
     });
 
     // Initialize the event store
-    this.eventStore = new SQLiteEventStore(this.database.db);
-    this.eventStore.setup();
+    this.eventStore = eventCache;
 
     // setup decryption cache
     this.decryptionCache = new DecryptionCache(this.database.db);
     this.decryptionCache.setup();
 
     // Setup managers user contacts and profiles
-    this.addressBook = new AddressBook(this);
-    this.profileBook = new ProfileBook(this);
-    this.contactBook = new ContactBook(this);
+    this.addressBook = new AddressBook();
+    this.profileBook = new ProfileBook();
+    this.contactBook = new ContactBook();
 
     // Setup the notifications manager
     this.notifications = new NotificationsManager(this /*this.eventStore, this.state*/);
@@ -291,8 +291,8 @@ export default class App extends EventEmitter<EventMap> {
         // send direct message
         const results = await this.directMessageManager.forwardMessage(ctx.event);
 
-        if (!results || !results.some((p) => p.status === "fulfilled")) throw new Error("Failed to forward message");
-        return `Forwarded message to ${results.filter((p) => p.status === "fulfilled").length}/${results.length} relays`;
+        if (!results || !results.some((p) => p.ok)) throw new Error("Failed to forward message");
+        return `Forwarded message to ${results.filter((p) => p.ok).length}/${results.length} relays`;
       } else return next();
     });
 
@@ -320,8 +320,8 @@ export default class App extends EventEmitter<EventMap> {
         const profile = this.profileBook.getProfile(pubkey);
         if (!profile) {
           this.profileBook.loadProfile(pubkey, this.addressBook.getOutboxes(pubkey));
-          this.addressBook.loadOutboxes(pubkey).then((outboxes) => {
-            this.profileBook.loadProfile(pubkey, outboxes ?? undefined);
+          this.addressBook.loadMailboxes(pubkey).then((mailboxes) => {
+            this.profileBook.loadProfile(pubkey, mailboxes?.outboxes);
           });
         }
       };

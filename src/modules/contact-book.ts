@@ -1,33 +1,24 @@
-import { NostrEvent, kinds } from "nostr-tools";
-import _throttle from "lodash.throttle";
+import { tap } from "rxjs";
+import { kinds } from "nostr-tools";
+import { ReplaceableQuery, UserContactsQuery } from "applesauce-core/queries";
+import { getObservableValue } from "applesauce-core/observable";
 
-import { COMMON_CONTACT_RELAYS } from "../env.js";
 import { logger } from "../logger.js";
-import App from "../app/index.js";
-import PubkeyBatchLoader from "./pubkey-batch-loader.js";
+import { COMMON_CONTACT_RELAYS } from "../env.js";
+import { replaceableLoader } from "../services/loaders.js";
+import { eventStore, queryStore } from "../services/stores.js";
+import { simpleTimeout } from "../operators/simple-timeout.js";
+import { arrayFallback } from "../helpers/array.js";
+
+const DEFAULT_REQUEST_TIMEOUT = 10_000;
 
 /** Loads 3 contact lists for pubkeys */
 export default class ContactBook {
   log = logger.extend("ContactsBook");
-  app: App;
-  loader: PubkeyBatchLoader;
-  extraRelays = COMMON_CONTACT_RELAYS;
 
-  constructor(app: App) {
-    this.app = app;
-
-    this.loader = new PubkeyBatchLoader(kinds.Contacts, this.app.pool, (pubkey) => {
-      return this.app.eventStore.getEventsForFilters([{ kinds: [kinds.Contacts], authors: [pubkey] }])?.[0];
-    });
-
-    this.loader.on("event", (event) => this.app.eventStore.addEvent(event));
-    this.loader.on("batch", (found, failed) => {
-      this.log(`Found ${found}, failed ${failed}, pending ${this.loader.queue}`);
-    });
-  }
-
+  /** @deprecated use loadContacts instead */
   getContacts(pubkey: string) {
-    return this.loader.getEvent(pubkey);
+    return eventStore.getReplaceable(kinds.Contacts, pubkey);
   }
 
   getFollowedPubkeys(pubkey: string): string[] {
@@ -44,11 +35,29 @@ export default class ContactBook {
     return [];
   }
 
-  handleEvent(event: NostrEvent) {
-    this.loader.handleEvent(event);
+  async loadContacts(pubkey: string, relays?: string[], force?: boolean) {
+    relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
+    this.log(`Requesting contacts from ${relays.length} relays for ${pubkey}`);
+    replaceableLoader.next({ kind: kinds.Contacts, pubkey, relays, force });
+
+    return getObservableValue(
+      queryStore
+        .createQuery(UserContactsQuery, pubkey)
+        .pipe(simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load contacts for ${pubkey}`)),
+    );
   }
 
-  async loadContacts(pubkey: string, relays: string[] = []) {
-    return this.loader.getOrLoadEvent(pubkey, relays);
+  /** @deprecated */
+  async loadContactsEvent(pubkey: string, relays?: string[]) {
+    relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
+    this.log(`Requesting contacts from ${relays.length} relays for ${pubkey}`);
+    replaceableLoader.next({ kind: kinds.Contacts, pubkey, relays });
+
+    return getObservableValue(
+      queryStore.createQuery(ReplaceableQuery, kinds.Contacts, pubkey).pipe(
+        simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load contacts for ${pubkey}`),
+        tap((c) => c && this.log(`Found contacts for ${pubkey}`, c)),
+      ),
+    );
   }
 }

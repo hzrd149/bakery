@@ -1,36 +1,13 @@
 import EventEmitter from "events";
-import { NostrEvent, SimplePool, Filter } from "nostr-tools";
+import { NostrEvent, SimplePool } from "nostr-tools";
 import SuperMap from "@satellite-earth/core/helpers/super-map.js";
-import { AbstractRelay, Subscription, SubscriptionParams } from "nostr-tools/abstract-relay";
-import { getPubkeysFromList } from "@satellite-earth/core/helpers/nostr/lists.js";
-import { getInboxes, getOutboxes } from "@satellite-earth/core/helpers/nostr/mailboxes.js";
-import { getRelaysFromContactList } from "@satellite-earth/core/helpers/nostr/contacts.js";
+import { Subscription } from "nostr-tools/abstract-relay";
+import { getRelaysFromContactsEvent } from "applesauce-core/helpers";
 
-import { BOOTSTRAP_RELAYS } from "../../env.js";
+import { BOOTSTRAP_RELAYS, COMMON_CONTACT_RELAYS } from "../../env.js";
 import { logger } from "../../logger.js";
 import App from "../../app/index.js";
-
-/** creates a new subscription and waits for it to get an event or close */
-function asyncSubscription(relay: AbstractRelay, filters: Filter[], opts: SubscriptionParams) {
-  let resolved = false;
-
-  return new Promise<Subscription>((res, rej) => {
-    const sub = relay.subscribe(filters, {
-      onevent: (event) => {
-        if (!resolved) res(sub);
-        opts.onevent?.(event);
-      },
-      oneose: () => {
-        if (!resolved) res(sub);
-        opts.oneose?.();
-      },
-      onclose: (reason) => {
-        if (!resolved) rej(new Error(reason));
-        opts.onclose?.(reason);
-      },
-    });
-  });
-}
+import { arrayFallback } from "../../helpers/array.js";
 
 type EventMap = {
   started: [Receiver];
@@ -83,24 +60,26 @@ export default class Receiver extends EventEmitter<EventMap> {
     const owner = this.app.config.data.owner;
     if (!owner) throw new Error("Missing owner");
 
-    const ownerMailboxes = await this.app.addressBook.loadMailboxes(owner);
-    const ownerInboxes = getInboxes(ownerMailboxes);
-    const ownerOutboxes = getOutboxes(ownerMailboxes);
+    const commonMailboxesRelays = [...BOOTSTRAP_RELAYS, ...COMMON_CONTACT_RELAYS];
+
+    const ownerMailboxes = await this.app.addressBook.loadMailboxes(owner, commonMailboxesRelays, true);
 
     this.log("Searching for owner kind:3 contacts");
-    const contacts = await this.app.contactBook.loadContacts(owner);
+    const contacts = await this.app.contactBook.loadContacts(
+      owner,
+      arrayFallback(ownerMailboxes?.outboxes, BOOTSTRAP_RELAYS),
+      true,
+    );
     if (!contacts) throw new Error("Cant find contacts");
 
     this.pubkeyRelays.clear();
     this.relayPubkeys.clear();
 
     // add the owners details
-    this.pubkeyRelays.set(owner, new Set(ownerOutboxes));
-    for (const url of ownerOutboxes) this.relayPubkeys.get(url).add(owner);
+    this.pubkeyRelays.set(owner, new Set(ownerMailboxes?.outboxes));
+    if (ownerMailboxes?.outboxes) for (const url of ownerMailboxes?.outboxes) this.relayPubkeys.get(url).add(owner);
 
-    const people = getPubkeysFromList(contacts);
-
-    this.log(`Found ${people.length} contacts`);
+    this.log(`Found ${contacts.length} contacts`);
 
     let usersWithMailboxes = 0;
     let usersWithContactRelays = 0;
@@ -108,20 +87,28 @@ export default class Receiver extends EventEmitter<EventMap> {
 
     // fetch all addresses in parallel
     await Promise.all(
-      people.map(async (person) => {
-        const mailboxes = await this.app.addressBook.loadMailboxes(person.pubkey, ownerInboxes ?? BOOTSTRAP_RELAYS);
+      contacts.map(async (person) => {
+        const mailboxes = await this.app.addressBook.loadMailboxes(
+          person.pubkey,
+          arrayFallback(ownerMailboxes?.inboxes, commonMailboxesRelays),
+        );
 
-        let relays = getOutboxes(mailboxes);
+        let relays = mailboxes?.outboxes ?? [];
 
         // if the user does not have any mailboxes try to get the relays stored in the contact list
         if (relays.length === 0) {
           this.log(`Failed to find mailboxes for ${person.pubkey}`);
-          const contacts = await this.app.contactBook.loadContacts(person.pubkey, ownerInboxes ?? BOOTSTRAP_RELAYS);
+          const contacts = await this.app.contactBook.loadContactsEvent(
+            person.pubkey,
+            arrayFallback(ownerMailboxes?.inboxes, BOOTSTRAP_RELAYS),
+          );
 
           if (contacts && contacts.content.startsWith("{")) {
-            const parsed = getRelaysFromContactList(contacts);
+            const parsed = getRelaysFromContactsEvent(contacts);
             if (parsed) {
-              relays = parsed.filter((r) => r.write).map((r) => r.url);
+              relays = Array.from(parsed.entries())
+                .filter(([r, mode]) => mode === "all" || mode === "outbox")
+                .map(([r]) => r);
               usersWithContactRelays++;
             } else {
               relays = BOOTSTRAP_RELAYS;

@@ -1,13 +1,15 @@
 import { NotificationChannel, WebPushNotification } from "@satellite-earth/core/types/control-api/notifications.js";
-import { getDMRecipient, getDMSender, getUserDisplayName, parseKind0Event } from "@satellite-earth/core/helpers/nostr";
+import { getDMRecipient, getDMSender, getUserDisplayName } from "@satellite-earth/core/helpers/nostr";
 import { NostrEvent, kinds } from "nostr-tools";
 import { npubEncode } from "nostr-tools/nip19";
+import { getDisplayName, unixNow } from "applesauce-core/helpers";
 import EventEmitter from "events";
 import webPush from "web-push";
-import dayjs from "dayjs";
 
 import { logger } from "../../logger.js";
 import App from "../../app/index.js";
+import stateManager from "../../services/state.js";
+import config from "../../services/config.js";
 
 export type NotificationsManagerState = {
   channels: NotificationChannel[];
@@ -22,7 +24,7 @@ type EventMap = {
 export default class NotificationsManager extends EventEmitter<EventMap> {
   log = logger.extend("Notifications");
   app: App;
-  lastRead: number = dayjs().unix();
+  lastRead: number = unixNow();
 
   webPushKeys: webPush.VapidKeys = webPush.generateVAPIDKeys();
 
@@ -39,7 +41,7 @@ export default class NotificationsManager extends EventEmitter<EventMap> {
 
   async setup() {
     this.state = (
-      await this.app.state.getMutableState<NotificationsManagerState>("notification-manager", { channels: [] })
+      await stateManager.getMutableState<NotificationsManagerState>("notification-manager", { channels: [] })
     ).proxy;
   }
 
@@ -71,7 +73,7 @@ export default class NotificationsManager extends EventEmitter<EventMap> {
   /** Whether a notification should be sent */
   shouldNotify(event: NostrEvent) {
     if (event.kind !== kinds.EncryptedDirectMessage) return;
-    if (getDMRecipient(event) !== this.app.config.data.owner) return;
+    if (getDMRecipient(event) !== config.data.owner) return;
 
     if (event.created_at > this.lastRead) return true;
   }
@@ -82,9 +84,8 @@ export default class NotificationsManager extends EventEmitter<EventMap> {
     switch (event.kind) {
       case kinds.EncryptedDirectMessage:
         const sender = getDMSender(event);
-        const senderProfileEvent = await this.app.profileBook.loadProfile(sender);
-        const senderProfile = senderProfileEvent ? parseKind0Event(senderProfileEvent) : undefined;
-        const senderName = getUserDisplayName(senderProfile, sender);
+        const senderProfile = await this.app.profileBook.loadProfile(sender);
+        const senderName = senderProfile ? (getDisplayName(senderProfile) ?? "Unknown") : "Unknown";
 
         return {
           kind: event.kind,

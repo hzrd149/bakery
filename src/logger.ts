@@ -20,6 +20,4 @@ debug.log = function (this: Debugger, ...args: any[]) {
   console.log.apply(this, args);
 };
 
-const logger = debug("bakery");
-
-export { logger };
+export const logger = debug("bakery");

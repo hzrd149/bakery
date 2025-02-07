@@ -5,7 +5,6 @@ import { Deferred, createDefer } from "applesauce-core/promise";
 
 import App from "../../app/index.js";
 import { logger } from "../../logger.js";
-import { getPubkeysFromList } from "@satellite-earth/core/helpers/nostr/lists.js";
 import PubkeyScrapper from "./pubkey-scrapper.js";
 
 const MAX_TASKS = 10;
@@ -49,7 +48,7 @@ export default class Scrapper extends EventEmitter<EventMap> {
 
     if (!contacts) throw new Error("Missing contact list");
 
-    return { contacts: getPubkeysFromList(contacts), mailboxes };
+    return { contacts, mailboxes };
   }
 
   private async scrapeOwner() {
@@ -104,7 +103,7 @@ export default class Scrapper extends EventEmitter<EventMap> {
       // check running again since this is resuming
       if (!this.running) return;
 
-      const promise = this.scrapeForPubkey(person.pubkey, person.relay);
+      const promise = this.scrapeForPubkey(person.pubkey, person.relays?.[0]);
 
       // add it to the tasks array
       this.tasks.add(promise);

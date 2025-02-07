@@ -1,13 +1,17 @@
+import { filter, lastValueFrom, mergeMap, Subscription, tap, toArray } from "rxjs";
 import { NostrEvent, kinds } from "nostr-tools";
-import { SubCloser } from "nostr-tools/abstract-pool";
-import { Subscription } from "nostr-tools/abstract-relay";
-import { getInboxes } from "applesauce-core/helpers";
+import { createRxForwardReq } from "rx-nostr";
+import { getRelaysFromContactList } from "@satellite-earth/core/helpers/nostr/contacts.js";
+import { MailboxesQuery } from "applesauce-core/queries";
 import { EventEmitter } from "events";
 
-import { getRelaysFromContactList } from "@satellite-earth/core/helpers/nostr/contacts.js";
 import { logger } from "../logger.js";
 import type App from "../app/index.js";
 import { arrayFallback } from "../helpers/array.js";
+import { rxNostr } from "../services/rx-nostr.js";
+import { eventStore, queryStore } from "../services/stores.js";
+import { COMMON_CONTACT_RELAYS } from "../env.js";
+import { bufferAudit } from "../helpers/rxjs.js";
 
 type EventMap = {
   open: [string, string];
@@ -47,11 +51,11 @@ export default class DirectMessageManager extends EventEmitter<EventMap> {
     if (!addressedTo) return;
 
     // get users inboxes
-    let relays = await this.app.addressBook.loadInboxes(addressedTo);
+    let relays = (await this.app.addressBook.loadMailboxes(addressedTo))?.inboxes;
 
     if (!relays || relays.length === 0) {
       // try to send the DM to the users legacy app relays
-      const contacts = await this.app.contactBook.loadContacts(addressedTo);
+      const contacts = await this.app.contactBook.loadContactsEvent(addressedTo);
       if (contacts) {
         const appRelays = getRelaysFromContactList(contacts);
 
@@ -65,7 +69,7 @@ export default class DirectMessageManager extends EventEmitter<EventMap> {
     }
 
     this.log(`Forwarding message to ${relays.length} relays`);
-    const results = await Promise.allSettled(this.app.pool.publish(relays, event));
+    const results = await lastValueFrom(rxNostr.send(event, { on: { relays } }).pipe(toArray()));
 
     return results;
   }
@@ -75,95 +79,93 @@ export default class DirectMessageManager extends EventEmitter<EventMap> {
     else return b + ":" + a;
   }
 
-  watching = new Map<string, Map<string, Subscription>>();
+  watching = new Map<string, Subscription>();
   async watchInbox(pubkey: string) {
     if (this.watching.has(pubkey)) return;
 
+    this.app.addressBook.loadMailboxes(pubkey, COMMON_CONTACT_RELAYS, true);
+
     this.log(`Watching ${pubkey} inboxes for mail`);
-    const mailboxes = await this.app.addressBook.loadMailboxes(pubkey);
-    if (!mailboxes) {
-      this.log(`Failed to get ${pubkey} mailboxes`);
-      return;
-    }
+    const subscription = queryStore
+      .createQuery(MailboxesQuery, pubkey)
+      .pipe(
+        // ignore undefined
+        filter((m) => !!m),
+        // start a new subscription for each update
+        mergeMap((mailboxes) => {
+          const relays = arrayFallback(mailboxes.inboxes, this.explicitRelays);
+          this.log(`Subscribing to ${relays.length} relays for ${pubkey}`);
 
-    const relays = arrayFallback(getInboxes(mailboxes), this.explicitRelays);
-    const subscriptions = new Map<string, Subscription>();
+          const req = createRxForwardReq();
+          const sub = rxNostr.use(req, { on: { relays } }).pipe(
+            filter((packet) => this.app.eventStore.addEvent(packet.event)),
+            // also pass to event store
+            tap((packet) => eventStore.add(packet.event, packet.from)),
+            // log how many events where found every 10s
+            bufferAudit(10_000, (events) => {
+              if (events.length > 0) this.log(`Found ${events.length} new events for ${pubkey}`);
+            }),
+          );
 
-    for (const url of relays) {
-      const subscribe = async () => {
-        const relay = await this.app.pool.ensureRelay(url);
-        const sub = relay.subscribe([{ kinds: [kinds.EncryptedDirectMessage], "#p": [pubkey] }], {
-          onevent: (event) => {
-            this.app.eventStore.addEvent(event);
-          },
-          onclose: () => {
-            // reconnect if we are still watching this pubkey
-            if (this.watching.has(pubkey)) {
-              this.log(`Reconnecting to ${relay.url} for ${pubkey} inbox DMs`);
-              setTimeout(() => subscribe(), 30_000);
-            }
-          },
-        });
+          req.emit({ kinds: [kinds.EncryptedDirectMessage], "#p": [pubkey] });
 
-        subscriptions.set(relay.url, sub);
-      };
+          return sub;
+        }),
+      )
+      .subscribe();
 
-      subscribe();
-    }
-    this.watching.set(pubkey, subscriptions);
+    this.watching.set(pubkey, subscription);
   }
   stopWatchInbox(pubkey: string) {
-    const subs = this.watching.get(pubkey);
-    if (subs) {
+    const sub = this.watching.get(pubkey);
+    if (sub) {
+      sub.unsubscribe();
       this.watching.delete(pubkey);
-      for (const [_, sub] of subs) {
-        sub.close();
-      }
     }
   }
 
-  subscriptions = new Map<string, SubCloser>();
+  openConversations = new Map<string, Subscription>();
   async openConversation(a: string, b: string) {
     const key = this.getConversationKey(a, b);
 
-    if (this.subscriptions.has(key)) return;
+    if (this.openConversations.has(key)) return;
 
     const aMailboxes = await this.app.addressBook.loadMailboxes(a);
     const bMailboxes = await this.app.addressBook.loadMailboxes(b);
 
     // If inboxes for either user cannot be determined, either because nip65
-    // was not found, or nip65 had no listed read relays, fall back to explicit
-    const aInboxes = aMailboxes ? arrayFallback(getInboxes(aMailboxes), this.explicitRelays) : this.explicitRelays;
-    const bInboxes = bMailboxes ? arrayFallback(getInboxes(bMailboxes), this.explicitRelays) : this.explicitRelays;
+    // was not found, or nip65 had no listed read relays, fallback to explicit relays
+    const aInboxes = aMailboxes ? arrayFallback(aMailboxes.inboxes, this.explicitRelays) : this.explicitRelays;
+    const bInboxes = bMailboxes ? arrayFallback(bMailboxes.inboxes, this.explicitRelays) : this.explicitRelays;
 
     const relays = new Set([...aInboxes, ...bInboxes]);
 
-    let events = 0;
-    const sub = this.app.pool.subscribeMany(
-      Array.from(relays),
-      [{ kinds: [kinds.EncryptedDirectMessage], authors: [a, b], "#p": [a, b] }],
-      {
-        onevent: (event) => {
-          events += +this.app.eventStore.addEvent(event);
-        },
-        oneose: () => {
-          if (events) this.log(`Found ${events} new messages`);
-        },
-      },
-    );
+    const req = createRxForwardReq();
+    const sub = rxNostr
+      .use(req)
+      .pipe(filter((packet) => this.app.eventStore.addEvent(packet.event)))
+      .subscribe();
+
+    req.emit([{ kinds: [kinds.EncryptedDirectMessage], authors: [a, b], "#p": [a, b] }]);
 
     this.log(`Opened conversation ${key} on ${relays.size} relays`);
-    this.subscriptions.set(key, sub);
+    this.openConversations.set(key, sub);
     this.emit("open", a, b);
   }
+
   closeConversation(a: string, b: string) {
     const key = this.getConversationKey(a, b);
 
-    const sub = this.subscriptions.get(key);
+    const sub = this.openConversations.get(key);
     if (sub) {
-      sub.close();
-      this.subscriptions.delete(key);
+      sub.unsubscribe();
+      this.openConversations.delete(key);
       this.emit("close", a, b);
     }
+  }
+
+  [Symbol.dispose]() {
+    for (const [_, sub] of this.watching) sub.unsubscribe();
+    for (const [_, sub] of this.openConversations) sub.unsubscribe();
   }
 }
