@@ -7,7 +7,7 @@ import HyperOutbound from "./hyper.js";
 import TorOutbound from "./tor.js";
 import I2POutbound from "./i2p.js";
 
-export class OutboundNetworkManager {
+export default class OutboundNetworkManager {
   log = logger.extend("Network:Outbound");
   hyper: HyperOutbound;
   tor: TorOutbound;
@@ -128,7 +128,3 @@ function FindProxyForURL(url, host)
     await this.tor.stop();
   }
 }
-
-const outboundNetwork = new OutboundNetworkManager();
-
-export default outboundNetwork;

@@ -8,6 +8,7 @@ import { BOOTSTRAP_RELAYS, COMMON_CONTACT_RELAYS } from "../../env.js";
 import { logger } from "../../logger.js";
 import App from "../../app/index.js";
 import { arrayFallback } from "../../helpers/array.js";
+import { requestLoader } from "../../services/loaders.js";
 
 type EventMap = {
   started: [Receiver];
@@ -62,12 +63,14 @@ export default class Receiver extends EventEmitter<EventMap> {
 
     const commonMailboxesRelays = [...BOOTSTRAP_RELAYS, ...COMMON_CONTACT_RELAYS];
 
-    const ownerMailboxes = await this.app.addressBook.loadMailboxes(owner, commonMailboxesRelays, true);
+    const ownerMailboxes = await requestLoader.mailboxes({ pubkey: owner, relays: commonMailboxesRelays }, true);
 
     this.log("Searching for owner kind:3 contacts");
-    const contacts = await this.app.contactBook.loadContacts(
-      owner,
-      arrayFallback(ownerMailboxes?.outboxes, BOOTSTRAP_RELAYS),
+    const contacts = await requestLoader.contacts(
+      {
+        pubkey: owner,
+        relays: arrayFallback(ownerMailboxes?.outboxes, BOOTSTRAP_RELAYS),
+      },
       true,
     );
     if (!contacts) throw new Error("Cant find contacts");

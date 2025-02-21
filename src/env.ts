@@ -2,8 +2,8 @@ import "dotenv/config";
 import { mkdirp } from "mkdirp";
 import { OUTBOUND_PROXY_TYPES } from "./const.js";
 
-import { safeRelayUrls } from "applesauce-core/helpers";
 import { normalizeToHexPubkey } from "./helpers/nip19.js";
+import { normalizeURL } from "applesauce-core/helpers";
 
 export const OWNER_PUBKEY = process.env.OWNER_PUBKEY ? normalizeToHexPubkey(process.env.OWNER_PUBKEY) : undefined;
 export const PUBLIC_ADDRESS = process.env.PUBLIC_ADDRESS;
@@ -28,11 +28,11 @@ if (!OUTBOUND_PROXY_TYPES.includes(TOR_PROXY_TYPE)) throw new Error("Invalid TOR
 
 // Default relay config
 export const BOOTSTRAP_RELAYS = process.env.BOOTSTRAP_RELAYS
-  ? safeRelayUrls(process.env.BOOTSTRAP_RELAYS.split(","))
-  : safeRelayUrls(["wss://nos.lol", "wss://relay.damus.io", "wss://relay.nostr.band"]);
+  ? process.env.BOOTSTRAP_RELAYS.split(",").map(normalizeURL)
+  : ["wss://nos.lol", "wss://relay.damus.io", "wss://relay.nostr.band"].map(normalizeURL);
 
 export const COMMON_CONTACT_RELAYS = process.env.COMMON_CONTACT_RELAYS
-  ? safeRelayUrls(process.env.COMMON_CONTACT_RELAYS.split(","))
-  : safeRelayUrls(["wss://purplepag.es", "wss://user.kindpag.es"]);
+  ? process.env.COMMON_CONTACT_RELAYS.split(",").map(normalizeURL)
+  : ["wss://purplepag.es", "wss://user.kindpag.es"].map(normalizeURL);
 
 export const IS_DEV = process.env.NODE_ENV === "development";

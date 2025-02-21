@@ -5,6 +5,7 @@ import { Debugger } from "debug";
 
 import PubkeyRelayScrapper, { PubkeyRelayScrapperState } from "./pubkey-relay-scrapper.js";
 import { logger } from "../../logger.js";
+import { requestLoader } from "../../services/loaders.js";
 
 type EventMap = {
   event: [NostrEvent];
@@ -30,7 +31,7 @@ export default class PubkeyScrapper extends EventEmitter<EventMap> {
   async ensureData() {
     // get mailboxes
     this.app.profileBook.loadProfile(this.pubkey);
-    const mailboxes = await this.app.addressBook.loadMailboxes(this.pubkey);
+    const mailboxes = await requestLoader.mailboxes({ pubkey: this.pubkey });
 
     return { mailboxes };
   }

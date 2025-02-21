@@ -39,8 +39,8 @@ import LogsActions from "../modules/control/logs-actions.js";
 import ApplicationStateManager from "../modules/state/application-state-manager.js";
 import ScrapperActions from "../modules/control/scrapper-actions.js";
 import InboundNetworkManager from "../modules/network/inbound/index.js";
+import OutboundNetworkManager from "../modules/network/outbound/index.js";
 import SecretsManager from "../modules/secrets-manager.js";
-import outboundNetwork, { OutboundNetworkManager } from "../modules/network/outbound/index.js";
 import Switchboard from "../modules/switchboard/switchboard.js";
 import Gossip from "../modules/gossip.js";
 import database from "../services/database.js";
@@ -49,6 +49,8 @@ import config from "../services/config.js";
 import logStore from "../services/log-store.js";
 import stateManager from "../services/state.js";
 import eventCache from "../services/event-cache.js";
+import { inboundNetwork, outboundNetwork } from "../services/network.js";
+import { server } from "../services/server.js";
 
 type EventMap = {
   listening: [];
@@ -111,8 +113,8 @@ export default class App extends EventEmitter<EventMap> {
     }
 
     // create http and ws server interface
-    this.server = createServer();
-    this.inboundNetwork = new InboundNetworkManager(this);
+    this.server = server;
+    this.inboundNetwork = inboundNetwork
     this.outboundNetwork = outboundNetwork;
 
     /** make the outbound network reflect the app config */

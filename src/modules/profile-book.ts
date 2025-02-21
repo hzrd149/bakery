@@ -1,13 +1,12 @@
 import { tap } from "rxjs";
 import { kinds } from "nostr-tools";
-import { getObservableValue } from "applesauce-core/observable";
+import { getObservableValue, simpleTimeout } from "applesauce-core/observable";
 import { ProfileQuery } from "applesauce-core/queries";
 
 import { COMMON_CONTACT_RELAYS } from "../env.js";
 import { logger } from "../logger.js";
 import { replaceableLoader } from "../services/loaders.js";
 import { eventStore, queryStore } from "../services/stores.js";
-import { simpleTimeout } from "../operators/simple-timeout.js";
 import { arrayFallback } from "../helpers/array.js";
 
 const DEFAULT_REQUEST_TIMEOUT = 10_000;

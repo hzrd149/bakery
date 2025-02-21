@@ -1,14 +1,15 @@
-import App from "../../../app/index.js";
-import HyperInbound from "./hyper.js";
+import { Server } from "http";
 import { logger } from "../../../logger.js";
 import { getIPAddresses } from "../../../helpers/ip.js";
-import TorInbound from "./tor.js";
 import ConfigManager from "../../config-manager.js";
+import config from "../../../services/config.js";
+
+import TorInbound from "./tor.js";
 import I2PInbound from "./i2p.js";
+import HyperInbound from "./hyper.js";
 
 /** manages all inbound servers on other networks: hyper, tor, i2p, etc... */
 export default class InboundNetworkManager {
-  app: App;
   log = logger.extend("Network:Inbound");
   hyper: HyperInbound;
   tor: TorInbound;
@@ -23,18 +24,16 @@ export default class InboundNetworkManager {
     return [...(ip ?? []), ...(tor ?? []), ...(hyper ?? [])];
   }
 
-  constructor(app: App) {
-    this.app = app;
+  constructor(public server: Server) {
+    this.hyper = new HyperInbound();
+    this.tor = new TorInbound();
+    this.i2p = new I2PInbound();
 
-    this.hyper = new HyperInbound(app);
-    this.tor = new TorInbound(app);
-    this.i2p = new I2PInbound(app);
-
-    this.listenToAppConfig(app.config);
+    this.listenToAppConfig(config);
   }
 
   private getAddress() {
-    const address = this.app.server.address();
+    const address = this.server.address();
 
     if (typeof address === "string" || address === null)
       throw new Error("External servers started when server does not have an address");
@@ -42,12 +41,12 @@ export default class InboundNetworkManager {
     return address;
   }
 
-  private update(config = this.app.config.data) {
+  private update(cfg = config.data) {
     if (!this.running) return;
     const address = this.getAddress();
 
-    if (this.hyper.available && config.hyperEnabled !== this.hyper.running) {
-      if (config.hyperEnabled) this.hyper.start(address);
+    if (this.hyper.available && cfg.hyperEnabled !== this.hyper.running) {
+      if (cfg.hyperEnabled) this.hyper.start(address);
       else this.hyper.stop();
     }
 

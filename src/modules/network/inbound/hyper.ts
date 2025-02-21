@@ -3,13 +3,12 @@ import { encodeAddress } from "hyper-address";
 import { hexToBytes } from "@noble/hashes/utils";
 import { AddressInfo } from "net";
 
-import App from "../../../app/index.js";
 import { InboundInterface } from "../interfaces.js";
 import { logger } from "../../../logger.js";
+import secrets from "../../../services/secrets.js";
 
-/** manages a holesail-server instance that points to the app.server http server */
+/** manages a holesail-server instance that points to the server http server */
 export default class HyperInbound implements InboundInterface {
-  app: App;
   hyper?: HolesailServer;
   log = logger.extend("Network:Inbound:Hyper");
 
@@ -19,10 +18,6 @@ export default class HyperInbound implements InboundInterface {
   running = false;
   error?: Error;
   address?: string;
-
-  constructor(app: App) {
-    this.app = app;
-  }
 
   async start(address: AddressInfo) {
     try {
@@ -43,7 +38,7 @@ export default class HyperInbound implements InboundInterface {
             port: address.port,
             address: address.address,
             secure: false,
-            buffSeed: this.app.secrets.get("hyperKey"),
+            buffSeed: secrets.get("hyperKey"),
           },
           () => {
             const address = "http://" + encodeAddress(hexToBytes(hyper.getPublicKey()));
