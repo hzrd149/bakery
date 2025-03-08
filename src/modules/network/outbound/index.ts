@@ -69,8 +69,6 @@ if (shExpMatch(host, "*.hyper"))
       // if tor is available, route all traffic through it
       statements.push(`${this.tor.type} ${this.tor.address}`);
       this.log("Routing all traffic through tor proxy");
-    } else {
-      statements.push('return "DIRECT";');
     }
 
     const PACFile = `
