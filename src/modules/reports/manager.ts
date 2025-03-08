@@ -1,8 +1,8 @@
-import SuperMap from "@satellite-earth/core/helpers/super-map.js";
 import { filter, Observable, shareReplay, Subscription } from "rxjs";
 import hash_sum from "hash-sum";
 
 import { Session } from "../../relay/session.js";
+import SuperMap from "../../helpers/super-map.js";
 
 // open query messages (id, type, args)
 export type QueryOpen<Args extends Record<string, any>> = ["QRY", "OPEN", string, string, Args];

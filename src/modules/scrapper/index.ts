@@ -1,4 +1,3 @@
-import SuperMap from "@satellite-earth/core/helpers/super-map.js";
 import { EventEmitter } from "events";
 import { NostrEvent } from "nostr-tools";
 import { Deferred, createDefer } from "applesauce-core/promise";
@@ -7,6 +6,7 @@ import App from "../../app/index.js";
 import { logger } from "../../logger.js";
 import PubkeyScrapper from "./pubkey-scrapper.js";
 import { requestLoader } from "../../services/loaders.js";
+import SuperMap from "../../helpers/super-map.js";
 
 const MAX_TASKS = 10;
 

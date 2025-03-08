@@ -1,6 +1,6 @@
 import { ReportArguments } from "@satellite-earth/core/types";
-import { EventRow, parseEventRow } from "@satellite-earth/core";
 import Report from "../report.js";
+import { EventRow, parseEventRow } from "../../../sqlite/event-store.js";
 
 export default class EventsSummaryReport extends Report<"EVENTS_SUMMARY"> {
   readonly type = "EVENTS_SUMMARY";

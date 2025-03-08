@@ -1,8 +1,6 @@
 import { WebSocketServer } from "ws";
-import { createServer, Server } from "http";
+import { Server } from "http";
 import { SimpleSigner } from "applesauce-signers/signers/simple-signer";
-import { IEventStore, NostrRelay, SQLiteEventStore } from "@satellite-earth/core";
-import { getDMRecipient } from "@satellite-earth/core/helpers/nostr";
 import { kinds } from "nostr-tools";
 import { AbstractRelay } from "nostr-tools/abstract-relay";
 import express, { Express } from "express";
@@ -48,9 +46,12 @@ import secrets from "../services/secrets.js";
 import config from "../services/config.js";
 import logStore from "../services/log-store.js";
 import stateManager from "../services/state.js";
-import eventCache from "../services/event-cache.js";
+import sqliteEventStore from "../services/event-cache.js";
 import { inboundNetwork, outboundNetwork } from "../services/network.js";
 import { server } from "../services/server.js";
+import { SQLiteEventStore } from "../sqlite/event-store.js";
+import { NostrRelay } from "../relay/nostr-relay.js";
+import { getDMRecipient } from "../helpers/nostr/dms.js";
 
 type EventMap = {
   listening: [];
@@ -71,7 +72,7 @@ export default class App extends EventEmitter<EventMap> {
   outboundNetwork: OutboundNetworkManager;
 
   database: Database;
-  eventStore: IEventStore;
+  eventStore: SQLiteEventStore;
   logStore: LogStore;
   relay: NostrRelay;
   receiver: Receiver;
@@ -114,7 +115,7 @@ export default class App extends EventEmitter<EventMap> {
 
     // create http and ws server interface
     this.server = server;
-    this.inboundNetwork = inboundNetwork
+    this.inboundNetwork = inboundNetwork;
     this.outboundNetwork = outboundNetwork;
 
     /** make the outbound network reflect the app config */
@@ -153,7 +154,7 @@ export default class App extends EventEmitter<EventMap> {
     });
 
     // Initialize the event store
-    this.eventStore = eventCache;
+    this.eventStore = sqliteEventStore;
 
     // setup decryption cache
     this.decryptionCache = new DecryptionCache(this.database.db);

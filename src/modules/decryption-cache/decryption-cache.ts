@@ -1,11 +1,11 @@
-import { mapParams } from "@satellite-earth/core/helpers/sql.js";
-import { MigrationSet } from "@satellite-earth/core/sqlite";
+import { MigrationSet } from "../../sqlite/migrations.js";
 import { type Database } from "better-sqlite3";
 import { EventEmitter } from "events";
 
+import { EventRow, parseEventRow } from "../../sqlite/event-store.js";
 import { logger } from "../../logger.js";
-import { EventRow, parseEventRow } from "@satellite-earth/core/sqlite-event-store";
 import { NostrEvent } from "nostr-tools";
+import { mapParams } from "../../helpers/sql.js";
 
 const migrations = new MigrationSet("decryption-cache");
 

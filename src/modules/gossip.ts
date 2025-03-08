@@ -1,11 +1,12 @@
 import { SimpleSigner } from "applesauce-signers/signers/simple-signer";
 import { EventTemplate, SimplePool } from "nostr-tools";
 import { getTagValue } from "applesauce-core/helpers";
-import { IEventStore, NostrRelay } from "@satellite-earth/core";
 import dayjs, { Dayjs } from "dayjs";
 
 import { logger } from "../logger.js";
 import InboundNetworkManager from "./network/inbound/index.js";
+import { NostrRelay } from "../relay/nostr-relay.js";
+import { SQLiteEventStore } from "../sqlite/event-store.js";
 
 function buildGossipTemplate(self: string, address: string, network: string): EventTemplate {
   return {
@@ -28,7 +29,7 @@ export default class Gossip {
   signer: SimpleSigner;
   pool: SimplePool;
   relay: NostrRelay;
-  eventStore: IEventStore;
+  eventStore: SQLiteEventStore;
 
   running = false;
   // default every 30 minutes
@@ -40,7 +41,7 @@ export default class Gossip {
     signer: SimpleSigner,
     pool: SimplePool,
     relay: NostrRelay,
-    eventStore: IEventStore,
+    eventStore: SQLiteEventStore,
   ) {
     this.network = network;
     this.signer = signer;

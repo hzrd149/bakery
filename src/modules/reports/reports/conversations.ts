@@ -1,9 +1,9 @@
 import { ReportArguments, ReportResults } from "@satellite-earth/core/types";
+import { getTagValue } from "applesauce-core/helpers";
 import { NostrEvent } from "nostr-tools";
-import { getTagValue } from "@satellite-earth/core/helpers/nostr";
-import SuperMap from "@satellite-earth/core/helpers/super-map.js";
 
 import Report from "../report.js";
+import SuperMap from "../../../helpers/super-map.js";
 
 export default class ConversationsReport extends Report<"CONVERSATIONS"> {
   readonly type = "CONVERSATIONS";

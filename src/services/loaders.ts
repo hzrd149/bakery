@@ -5,11 +5,11 @@ import { ReplaceableLoader, RequestLoader } from "applesauce-loaders/loaders";
 
 import { COMMON_CONTACT_RELAYS } from "../env.js";
 import { rxNostr } from "./rx-nostr.js";
-import eventCache from "./event-cache.js";
+import sqliteEventStore from "./event-cache.js";
 import { eventStore, queryStore } from "./stores.js";
 
 function cacheRequest(filters: Filter[]) {
-  const events = eventCache.getEventsForFilters(filters);
+  const events = sqliteEventStore.getEventsForFilters(filters);
   return from(events).pipe(tap(markFromCache));
 }
 
@@ -20,7 +20,7 @@ replaceableLoader.subscribe((packet) => {
   const event = eventStore.add(packet.event, packet.from);
 
   // save it to the cache if its new
-  if (!isFromCache(event)) eventCache.addEvent(event);
+  if (!isFromCache(event)) sqliteEventStore.addEvent(event);
 });
 
 export const requestLoader = new RequestLoader(queryStore);

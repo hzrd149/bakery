@@ -1,7 +1,7 @@
-import { MigrationSet } from "@satellite-earth/core/sqlite";
 import { Database } from "better-sqlite3";
 
 import { MutableState } from "./mutable-state.js";
+import { MigrationSet } from "../../sqlite/migrations.js";
 
 const migrations = new MigrationSet("application-state");
 

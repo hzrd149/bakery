@@ -1,7 +1,6 @@
 import { filter, lastValueFrom, mergeMap, Subscription, tap, toArray } from "rxjs";
 import { NostrEvent, kinds } from "nostr-tools";
 import { createRxForwardReq } from "rx-nostr";
-import { getRelaysFromContactList } from "@satellite-earth/core/helpers/nostr/contacts.js";
 import { MailboxesQuery } from "applesauce-core/queries";
 import { EventEmitter } from "events";
 
@@ -12,6 +11,7 @@ import { rxNostr } from "../services/rx-nostr.js";
 import { eventStore, queryStore } from "../services/stores.js";
 import { COMMON_CONTACT_RELAYS } from "../env.js";
 import { bufferAudit } from "../helpers/rxjs.js";
+import { getRelaysFromContactList } from "../helpers/nostr/contacts.js";
 
 type EventMap = {
   open: [string, string];

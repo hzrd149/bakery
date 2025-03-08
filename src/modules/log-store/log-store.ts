@@ -1,10 +1,10 @@
 import { type Database as SQLDatabase } from "better-sqlite3";
-import { MigrationSet } from "@satellite-earth/core/sqlite";
 import EventEmitter from "events";
 import { nanoid } from "nanoid";
 import { Debugger } from "debug";
 
 import { logger } from "../../logger.js";
+import { MigrationSet } from "../../sqlite/migrations.js";
 
 type EventMap = {
   log: [LogEntry];
@@ -157,7 +157,7 @@ export default class LogStore extends EventEmitter<EventMap> {
     }
     if (conditions.length > 0) sql += ` WHERE ${conditions.join(" AND ")}`;
 
-    this.database.prepare<any[], DatabaseLogEntry>(sql).run(...parameters);
+    this.database.prepare<any[]>(sql).run(parameters);
     this.emit("clear", filter?.service);
   }
 }

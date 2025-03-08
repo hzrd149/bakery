@@ -1,7 +1,7 @@
-import { SQLiteEventStore } from "@satellite-earth/core";
+import { SQLiteEventStore } from "../sqlite/event-store.js";
 import database from "./database.js";
 
-const eventCache = new SQLiteEventStore(database.db);
-await eventCache.setup();
+const sqliteEventStore = new SQLiteEventStore(database.db);
+await sqliteEventStore.setup();
 
-export default eventCache;
+export default sqliteEventStore;

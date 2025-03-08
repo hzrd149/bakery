@@ -1,5 +1,4 @@
 import { NotificationChannel, WebPushNotification } from "@satellite-earth/core/types/control-api/notifications.js";
-import { getDMRecipient, getDMSender, getUserDisplayName } from "@satellite-earth/core/helpers/nostr";
 import { NostrEvent, kinds } from "nostr-tools";
 import { npubEncode } from "nostr-tools/nip19";
 import { getDisplayName, unixNow } from "applesauce-core/helpers";
@@ -10,6 +9,7 @@ import { logger } from "../../logger.js";
 import App from "../../app/index.js";
 import stateManager from "../../services/state.js";
 import config from "../../services/config.js";
+import { getDMRecipient, getDMSender } from "../../helpers/nostr/dms.js";
 
 export type NotificationsManagerState = {
   channels: NotificationChannel[];

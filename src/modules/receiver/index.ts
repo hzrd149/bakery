@@ -1,6 +1,5 @@
 import EventEmitter from "events";
 import { NostrEvent, SimplePool } from "nostr-tools";
-import SuperMap from "@satellite-earth/core/helpers/super-map.js";
 import { Subscription } from "nostr-tools/abstract-relay";
 import { getRelaysFromContactsEvent } from "applesauce-core/helpers";
 
@@ -9,6 +8,7 @@ import { logger } from "../../logger.js";
 import App from "../../app/index.js";
 import { arrayFallback } from "../../helpers/array.js";
 import { requestLoader } from "../../services/loaders.js";
+import SuperMap from "../../helpers/super-map.js";
 
 type EventMap = {
   started: [Receiver];

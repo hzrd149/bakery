@@ -34,14 +34,14 @@ export default class LocalDatabase extends EventEmitter {
     // Detect architecture to pass the correct native sqlite module
     this.db = new Database(this.path.main);
 
-    if (this.config.wal) this.db.pragma("journal_mode = WAL");
+    if (this.config.wal) this.db.exec("PRAGMA journal_mode = WAL");
   }
 
   hasTable(table: string) {
     const result = this.db
-      .prepare(`SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name=?`)
-      .get([table]) as { count: number };
-    return result.count > 0;
+      .prepare<[string], { count: number }>(`SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name=?`)
+      .get(table);
+    return !!result && result.count > 0;
   }
 
   // Delete all events in the database
