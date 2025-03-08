@@ -4,8 +4,10 @@ import hash_sum from "hash-sum";
 import { Session } from "../../relay/session.js";
 import SuperMap from "../../helpers/super-map.js";
 
+export type Query<T extends unknown = unknown> = (args: T, socket: WebSocket) => Observable<any>;
+
 // open query messages (id, type, args)
-export type QueryOpen<Args extends Record<string, any>> = ["QRY", "OPEN", string, string, Args];
+export type QueryOpen<Args extends unknown> = ["QRY", "OPEN", string, string, Args];
 // close query message (id)
 export type QueryClose = ["QRY", "CLOSE", string];
 

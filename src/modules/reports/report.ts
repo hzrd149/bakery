@@ -1,9 +1,12 @@
 import { WebSocket } from "ws";
+import { Observable } from "rxjs";
 import { ReportErrorMessage, ReportResultMessage } from "@satellite-earth/core/types/control-api/reports.js";
 import { ReportArguments, ReportResults } from "@satellite-earth/core/types";
 
 import type App from "../../app/index.js";
 import { logger } from "../../logger.js";
+
+export type NewReport = (socket: WebSocket | NodeJS.Process) => Observable<any>;
 
 type f = () => void;
 

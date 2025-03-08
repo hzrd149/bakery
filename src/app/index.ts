@@ -5,6 +5,7 @@ import { kinds } from "nostr-tools";
 import { AbstractRelay } from "nostr-tools/abstract-relay";
 import express, { Express } from "express";
 import { EventEmitter } from "events";
+import { filter } from "rxjs";
 import cors from "cors";
 
 import { logger } from "../logger.js";
@@ -52,6 +53,9 @@ import { server } from "../services/server.js";
 import { SQLiteEventStore } from "../sqlite/event-store.js";
 import { NostrRelay } from "../relay/nostr-relay.js";
 import { getDMRecipient } from "../helpers/nostr/dms.js";
+import { onConnection, onJSONMessage } from "../helpers/ws.js";
+import QueryManager from "../modules/queries/manager.js";
+import "../modules/queries/queries/index.js";
 
 type EventMap = {
   listening: [];
@@ -205,6 +209,7 @@ export default class App extends EventEmitter<EventMap> {
     this.control.registerHandler(new NotificationActions(this));
     this.control.registerHandler(new RemoteAuthActions(this));
     this.control.registerHandler(new DecryptionCacheActions(this));
+
     this.control.registerHandler(new LogsActions(this));
 
     // reports
@@ -216,6 +221,16 @@ export default class App extends EventEmitter<EventMap> {
 
     // if process has an RPC interface, attach control api to it
     if (process.send) this.control.attachToProcess(process);
+
+    // queries
+    onConnection(this.wss).subscribe((ws) => {
+      const manager = new QueryManager(ws);
+      const sub = onJSONMessage(ws)
+        .pipe(filter((m) => Array.isArray(m)))
+        .subscribe(manager.messages);
+
+      ws.once("close", () => sub.unsubscribe());
+    });
 
     this.relay = new NostrRelay(this.eventStore);
     this.relay.sendChallenge = true;
