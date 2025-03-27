@@ -1,4 +1,3 @@
-import { tap } from "rxjs";
 import { kinds } from "nostr-tools";
 import { MailboxesQuery } from "applesauce-core/queries";
 import { getObservableValue, simpleTimeout } from "applesauce-core/observable";
@@ -30,14 +29,12 @@ export default class AddressBook {
 
   async loadMailboxes(pubkey: string, relays?: string[], force?: boolean) {
     relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
-    this.log(`Requesting mailboxes from ${relays.length} relays for ${pubkey}`);
     replaceableLoader.next({ kind: kinds.RelayList, pubkey, relays, force });
 
     return getObservableValue(
-      queryStore.createQuery(MailboxesQuery, pubkey).pipe(
-        simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load mailboxes for ${pubkey}`),
-        tap((m) => m && this.log(`Found mailboxes for ${pubkey}`, m)),
-      ),
+      queryStore
+        .createQuery(MailboxesQuery, pubkey)
+        .pipe(simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load mailboxes for ${pubkey}`)),
     );
   }
 }

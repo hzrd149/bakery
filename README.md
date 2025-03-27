@@ -1,3 +1,3 @@
-# bakery
+# noStrudel Bakery
 
-A relay backend for noStrudel
+A backend for [noStrudel](https://github.com/hzrd149/noStrudel)

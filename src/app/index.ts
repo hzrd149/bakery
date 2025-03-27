@@ -29,7 +29,6 @@ import ProfileBook from "../modules/profile-book.js";
 import ContactBook from "../modules/contact-book.js";
 import CautiousPool from "../modules/cautious-pool.js";
 import RemoteAuthActions from "../modules/control/remote-auth-actions.js";
-import ReportActions from "../modules/control/report-actions.js";
 import LogStore from "../modules/log-store/log-store.js";
 import DecryptionCache from "../modules/decryption-cache/decryption-cache.js";
 import DecryptionCacheActions from "../modules/control/decryption-cache.js";
@@ -82,7 +81,6 @@ export default class App extends EventEmitter<EventMap> {
   receiver: Receiver;
   scrapper: Scrapper;
   control: ControlApi;
-  reports: ReportActions;
   pool: CautiousPool;
   addressBook: AddressBook;
   profileBook: ProfileBook;
@@ -211,10 +209,6 @@ export default class App extends EventEmitter<EventMap> {
     this.control.registerHandler(new DecryptionCacheActions(this));
 
     this.control.registerHandler(new LogsActions(this));
-
-    // reports
-    this.reports = new ReportActions(this);
-    this.control.registerHandler(this.reports);
 
     // connect control api to websocket server
     this.control.attachToServer(this.wss);
@@ -412,7 +406,6 @@ export default class App extends EventEmitter<EventMap> {
     this.scrapper.stop();
     this.receiver.stop();
     await this.state.saveAll();
-    this.reports.cleanup();
     this.relay.stop();
     this.database.destroy();
     this.receiver.destroy();

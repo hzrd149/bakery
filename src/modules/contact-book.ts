@@ -1,4 +1,3 @@
-import { tap } from "rxjs";
 import { kinds } from "nostr-tools";
 import { ReplaceableQuery, UserContactsQuery } from "applesauce-core/queries";
 import { getObservableValue, simpleTimeout } from "applesauce-core/observable";
@@ -36,7 +35,6 @@ export default class ContactBook {
 
   async loadContacts(pubkey: string, relays?: string[], force?: boolean) {
     relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
-    this.log(`Requesting contacts from ${relays.length} relays for ${pubkey}`);
     replaceableLoader.next({ kind: kinds.Contacts, pubkey, relays, force });
 
     return getObservableValue(
@@ -49,14 +47,12 @@ export default class ContactBook {
   /** @deprecated */
   async loadContactsEvent(pubkey: string, relays?: string[]) {
     relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
-    this.log(`Requesting contacts from ${relays.length} relays for ${pubkey}`);
     replaceableLoader.next({ kind: kinds.Contacts, pubkey, relays });
 
     return getObservableValue(
-      queryStore.createQuery(ReplaceableQuery, kinds.Contacts, pubkey).pipe(
-        simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load contacts for ${pubkey}`),
-        tap((c) => c && this.log(`Found contacts for ${pubkey}`, c)),
-      ),
+      queryStore
+        .createQuery(ReplaceableQuery, kinds.Contacts, pubkey)
+        .pipe(simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load contacts for ${pubkey}`)),
     );
   }
 }
