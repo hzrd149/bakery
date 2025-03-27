@@ -1,4 +1,5 @@
 import "./actions.js";
-import "./events.js";
-import "./database.js";
 import "./config.js";
+import "./connection.js";
+import "./database.js";
+import "./events.js";

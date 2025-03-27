@@ -4,6 +4,8 @@ import server from "../server.js";
 import { ownerAccount$ } from "../../owner.js";
 import { NostrConnectSigner } from "applesauce-signers";
 import { NostrConnectAccount } from "applesauce-accounts/accounts";
+import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
+import config from "../../config.js";
 
 server.tool(
   "set_owner_nostr_connect_uri",
@@ -20,5 +22,16 @@ server.tool(
     } catch (error: any) {
       return { content: [{ type: "text", text: "Error connecting to the nostr signer: " + error.message }] };
     }
+  },
+);
+
+server.tool(
+  "set_owner_pubkey",
+  "Sets the owner of the bakery",
+  { pubkey: z.string().transform((hex) => normalizeToHexPubkey(hex, true)) },
+  async ({ pubkey }) => {
+    config.setField("owner", pubkey);
+
+    return { content: [{ type: "text", text: "Owner set" }] };
   },
 );
