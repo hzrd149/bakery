@@ -1,7 +1,7 @@
 import { Server } from "http";
 import { logger } from "../../../logger.js";
 import { getIPAddresses } from "../../../helpers/ip.js";
-import ConfigManager from "../../config-manager.js";
+import ConfigManager from "../../config/config-manager.js";
 import config from "../../../services/config.js";
 
 import TorInbound from "./tor.js";

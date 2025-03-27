@@ -11,7 +11,7 @@ import { rxNostr } from "../services/rx-nostr.js";
 import { eventStore, queryStore } from "../services/stores.js";
 import { COMMON_CONTACT_RELAYS } from "../env.js";
 import { bufferAudit } from "../helpers/rxjs.js";
-import { getRelaysFromContactList } from "../helpers/nostr/contacts.js";
+import { getRelaysFromContactList } from "../helpers/contacts.js";
 
 type EventMap = {
   open: [string, string];

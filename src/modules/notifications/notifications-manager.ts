@@ -9,7 +9,7 @@ import { logger } from "../../logger.js";
 import App from "../../app/index.js";
 import stateManager from "../../services/state.js";
 import config from "../../services/config.js";
-import { getDMRecipient, getDMSender } from "../../helpers/nostr/dms.js";
+import { getDMRecipient, getDMSender } from "../../helpers/direct-messages.js";
 
 export type NotificationsManagerState = {
   channels: NotificationChannel[];

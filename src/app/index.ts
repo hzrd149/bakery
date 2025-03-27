@@ -14,7 +14,7 @@ import Database from "./database.js";
 import { NIP_11_SOFTWARE_URL, SENSITIVE_KINDS } from "../const.js";
 import { OWNER_PUBKEY, PORT } from "../env.js";
 
-import ConfigManager from "../modules/config-manager.js";
+import ConfigManager from "../modules/config/config-manager.js";
 import ControlApi from "../modules/control/control-api.js";
 import ConfigActions from "../modules/control/config-actions.js";
 import ReceiverActions from "../modules/control/receiver-actions.js";
@@ -51,7 +51,7 @@ import { inboundNetwork, outboundNetwork } from "../services/network.js";
 import { server } from "../services/server.js";
 import { SQLiteEventStore } from "../sqlite/event-store.js";
 import { NostrRelay } from "../relay/nostr-relay.js";
-import { getDMRecipient } from "../helpers/nostr/dms.js";
+import { getDMRecipient } from "../helpers/direct-messages.js";
 import { onConnection, onJSONMessage } from "../helpers/ws.js";
 import QueryManager from "../modules/queries/manager.js";
 import "../modules/queries/queries/index.js";

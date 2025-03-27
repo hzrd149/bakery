@@ -3,8 +3,8 @@ import _throttle from "lodash.throttle";
 import { uniqueNamesGenerator, adjectives, colors, animals } from "unique-names-generator";
 import { PrivateNodeConfig } from "@satellite-earth/core/types/private-node-config.js";
 
-import { logger } from "../logger.js";
-import { ReactiveJsonFileSync } from "../classes/json-file.js";
+import { logger } from "../../logger.js";
+import { ReactiveJsonFileSync } from "../../classes/json-file.js";
 
 export const defaultConfig: PrivateNodeConfig = {
   name: uniqueNamesGenerator({
