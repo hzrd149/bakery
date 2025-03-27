@@ -68,7 +68,7 @@ async function returnUnsigned(draft: EventTemplate | Promise<EventTemplate>): Pr
 }
 
 server.tool(
-  "Short text note draft",
+  "short_text_note_draft",
   "Create a short text note draft event",
   {
     content: z.string(),
