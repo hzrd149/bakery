@@ -1,16 +1,17 @@
 import "dotenv/config";
 import { mkdirp } from "mkdirp";
-import { OUTBOUND_PROXY_TYPES } from "./const.js";
-
-import { normalizeToHexPubkey } from "./helpers/nip19.js";
 import { normalizeURL } from "applesauce-core/helpers";
+
+import { OUTBOUND_PROXY_TYPES } from "./const.js";
+import { normalizeToHexPubkey } from "./helpers/nip19.js";
+import args from "./args.js";
 
 export const OWNER_PUBKEY = process.env.OWNER_PUBKEY ? normalizeToHexPubkey(process.env.OWNER_PUBKEY) : undefined;
 export const PUBLIC_ADDRESS = process.env.PUBLIC_ADDRESS;
 export const DATA_PATH = process.env.DATA_PATH || "./data";
 await mkdirp(DATA_PATH);
 
-export const PORT = parseInt(process.env.PORT ?? "") || 3000;
+export const PORT = parseInt(args.values.port ?? process.env.PORT ?? "") || 3000;
 
 // I2P config
 export const I2P_PROXY = process.env.I2P_PROXY;
@@ -36,3 +37,5 @@ export const COMMON_CONTACT_RELAYS = process.env.COMMON_CONTACT_RELAYS
   : ["wss://purplepag.es", "wss://user.kindpag.es"].map(normalizeURL);
 
 export const IS_DEV = process.env.NODE_ENV === "development";
+
+export const IS_MCP = args.values.mcp;

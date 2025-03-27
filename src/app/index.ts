@@ -46,7 +46,7 @@ import secrets from "../services/secrets.js";
 import config from "../services/config.js";
 import logStore from "../services/log-store.js";
 import stateManager from "../services/state.js";
-import sqliteEventStore from "../services/event-cache.js";
+import eventCache from "../services/event-cache.js";
 import { inboundNetwork, outboundNetwork } from "../services/network.js";
 import { server } from "../services/server.js";
 import { SQLiteEventStore } from "../sqlite/event-store.js";
@@ -156,7 +156,7 @@ export default class App extends EventEmitter<EventMap> {
     });
 
     // Initialize the event store
-    this.eventStore = sqliteEventStore;
+    this.eventStore = eventCache;
 
     // setup decryption cache
     this.decryptionCache = new DecryptionCache(this.database.db);

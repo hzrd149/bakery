@@ -1,4 +1,5 @@
 import debug, { Debugger } from "debug";
+import { IS_MCP } from "./env.js";
 
 if (!process.env.DEBUG) debug.enable("bakery,bakery:*");
 
@@ -17,7 +18,9 @@ debug.log = function (this: Debugger, ...args: any[]) {
   for (const listener of listeners) {
     listener(this, ...args);
   }
-  console.log.apply(this, args);
+
+  // only log to console if not running in MCP mode
+  if (!IS_MCP) console.log.apply(this, args);
 };
 
 export const logger = debug("bakery");

@@ -9,7 +9,7 @@ import duration from "dayjs/plugin/duration.js";
 import localizedFormat from "dayjs/plugin/localizedFormat.js";
 
 import App from "./app/index.js";
-import { PUBLIC_ADDRESS } from "./env.js";
+import { PUBLIC_ADDRESS, IS_MCP } from "./env.js";
 import { addListener, logger } from "./logger.js";
 import { pathExists } from "./helpers/fs.js";
 
@@ -67,12 +67,21 @@ process.on("unhandledRejection", (reason, promise) => {
 // start the app
 await app.start();
 
+// Setup MCP interface on stdio
+if (IS_MCP) {
+  const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
+  const { default: server } = await import("./services/mcp/index.js");
+
+  // connect MCP server to stdio
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+}
+
 // shutdown process
 async function shutdown() {
   logger("shutting down");
 
   await app.stop();
-
   process.exit(0);
 }
 process.on("SIGINT", shutdown);
@@ -80,10 +89,10 @@ process.on("SIGTERM", shutdown);
 
 // catch unhandled errors
 process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
+  if (!IS_MCP) console.error("Uncaught Exception:", error);
 });
 
 // 2. Catch unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Promise Rejection:", reason);
+  if (!IS_MCP) console.error("Unhandled Promise Rejection:", reason);
 });
