@@ -1,5 +1,5 @@
 import { NostrConnectSigner } from "applesauce-signers/signers/nostr-connect-signer";
-import { BehaviorSubject, filter, lastValueFrom, pairwise } from "rxjs";
+import { BehaviorSubject, filter, lastValueFrom, pairwise, toArray } from "rxjs";
 import { ActionHub } from "applesauce-actions";
 import { EventFactory } from "applesauce-factory";
 
@@ -65,7 +65,7 @@ export const ownerSigner = new ProxySigner(ownerAccount$);
 export const ownerFactory = new EventFactory({ signer: ownerSigner });
 export const ownerActions = new ActionHub(eventStore, ownerFactory);
 
-export async function ownerPublish(event: NostrEvent) {
+export async function ownerPublish(event: NostrEvent, relays?: string[]) {
   // save event to local stores
   eventStore.add(event);
   eventCache.addEvent(event);
@@ -73,8 +73,8 @@ export async function ownerPublish(event: NostrEvent) {
   // publish event to owners outboxes
   if (config.data.owner) {
     try {
-      const mailboxes = await requestLoader.mailboxes({ pubkey: config.data.owner });
-      await lastValueFrom(rxNostr.send(event, { on: { relays: mailboxes.outboxes } }));
+      relays = relays || (await requestLoader.mailboxes({ pubkey: config.data.owner })).outboxes;
+      return await lastValueFrom(rxNostr.send(event, { on: { relays } }).pipe(toArray()));
     } catch (error) {
       // Failed to publish to outboxes, ignore error for now
       // TODO: this should retried at some point

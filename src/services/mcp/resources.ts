@@ -4,6 +4,7 @@ import server from "./server.js";
 import config from "../config.js";
 import { normalizeToHexPubkey } from "../../helpers/nip19.js";
 import { requestLoader } from "../loaders.js";
+import { kinds } from "nostr-tools";
 
 server.resource("owner_pubkey", "pubkey://owner", async (uri) => ({
   contents: [
@@ -18,7 +19,7 @@ server.resource("config", "config://app", async (uri) => ({
   contents: [
     {
       uri: uri.href,
-      text: JSON.stringify(config.data, null, 2),
+      text: JSON.stringify(config.data),
     },
   ],
 }));
@@ -36,9 +37,15 @@ server.resource(
       contents: [
         {
           uri: uri.href,
-          text: JSON.stringify(profile, null, 2),
+          text: JSON.stringify(profile),
         },
       ],
     };
   },
 );
+
+server.resource("event_kinds", "nostr://kinds", async (uri) => {
+  return {
+    contents: [{ uri: uri.href, text: JSON.stringify(kinds) }],
+  };
+});

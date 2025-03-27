@@ -1,15 +1,14 @@
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { getProfileContent } from "applesauce-core/helpers";
 import { kinds } from "nostr-tools";
-import { lastValueFrom, toArray } from "rxjs";
 import z from "zod";
 
 import server from "../server.js";
-import { ownerFactory } from "../../owner.js";
-import { rxNostr } from "../../rx-nostr.js";
+import { ownerFactory, ownerPublish } from "../../owner.js";
 import { requestLoader } from "../../loaders.js";
 import config from "../../config.js";
 import eventCache from "../../event-cache.js";
+import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 
 server.tool(
   "sign_draft_event",
@@ -41,6 +40,7 @@ server.tool(
   {
     event: z
       .object({
+        id: z.string().length(64),
         created_at: z.number(),
         content: z.string(),
         tags: z.array(z.array(z.string())),
@@ -55,12 +55,13 @@ server.tool(
     if (!config.data.owner) throw new Error("Owner not set");
 
     relays = relays || (await requestLoader.mailboxes({ pubkey: config.data.owner })).outboxes;
-    const results = await lastValueFrom(rxNostr.send(event, { on: { relays } }).pipe(toArray()));
+    const results = await ownerPublish(event, relays);
+    if (!results) throw new Error("Failed to publish event to relays");
 
     return {
       content: results.map((result) => ({
         type: "text",
-        text: `${result.from} ${result.ok ? "Success" : "Failed"}: ${result.message}`,
+        text: `${result.ok ? "Success" : "Failed"} ${result.from} ${result.notice ?? ""}`,
       })),
     };
   },
@@ -114,6 +115,50 @@ server.tool(
           text,
         } satisfies CallToolResult["content"][number];
       }),
+    };
+  },
+);
+
+server.tool(
+  "get_users_recent_events",
+  "Gets a list of recent events created by a pubkey",
+  {
+    pubkey: z
+      .string()
+      .transform((hex) => normalizeToHexPubkey(hex, true))
+      .describe("The pubkey of the user to get events for"),
+    limit: z.number().default(10).describe("The number of events to return"),
+    kinds: z.array(z.number()).default([kinds.ShortTextNote]).describe("The kind number of events to return"),
+    since: z.number().optional().describe("The unix timestamp to start the search from"),
+    until: z.number().optional().describe("The unix timestamp to end the search at"),
+  },
+  async ({ pubkey, limit, kinds, since, until }) => {
+    const events = await eventCache.getEventsForFilters([{ authors: [pubkey], limit, kinds, since, until }]);
+
+    return {
+      content: events.map((event) => ({ type: "text", text: JSON.stringify(event) })),
+    };
+  },
+);
+
+server.tool(
+  "get_events_pubkey_mentioned",
+  "Gets a list of recent events that the pubkey was mentioned in",
+  {
+    pubkey: z
+      .string()
+      .transform((hex) => normalizeToHexPubkey(hex, true))
+      .describe("The pubkey of the user to get events for"),
+    limit: z.number().default(10).describe("The number of events to return"),
+    kinds: z.array(z.number()).default([kinds.ShortTextNote]).describe("The kind number of events to return"),
+    since: z.number().optional().describe("The unix timestamp to start the search from"),
+    until: z.number().optional().describe("The unix timestamp to end the search at"),
+  },
+  async ({ pubkey, limit, kinds, since, until }) => {
+    const events = await eventCache.getEventsForFilters([{ "#p": [pubkey], limit, kinds, since, until }]);
+
+    return {
+      content: events.map((event) => ({ type: "text", text: JSON.stringify(event) })),
     };
   },
 );
