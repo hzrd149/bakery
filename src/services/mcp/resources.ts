@@ -5,7 +5,7 @@ import config from "../config.js";
 import { normalizeToHexPubkey } from "../../helpers/nip19.js";
 import { requestLoader } from "../loaders.js";
 
-server.resource("owner pubkey", "pubkey://owner", async (uri) => ({
+server.resource("owner_pubkey", "pubkey://owner", async (uri) => ({
   contents: [
     {
       uri: uri.href,
@@ -24,7 +24,7 @@ server.resource("config", "config://app", async (uri) => ({
 }));
 
 server.resource(
-  "user profile",
+  "user_profile",
   new ResourceTemplate("users://{pubkey}/profile", { list: undefined }),
   async (uri, { pubkey }) => {
     if (typeof pubkey !== "string") throw new Error("Pubkey must be a string");
