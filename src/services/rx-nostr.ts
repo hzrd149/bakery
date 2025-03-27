@@ -1,6 +1,5 @@
-import { ConnectionState, createRxNostr } from "rx-nostr";
+import { ConnectionState, createRxNostr, noopVerifier } from "rx-nostr";
 import { unixNow } from "applesauce-core/helpers";
-import { verifyEvent } from "nostr-tools/wasm";
 import { BehaviorSubject } from "rxjs";
 import { nanoid } from "nanoid";
 
@@ -8,13 +7,8 @@ import { nanoid } from "nanoid";
 // const log = logger.extend("rx-nostr");
 
 export const rxNostr = createRxNostr({
-  verifier: async (event) => {
-    try {
-      return verifyEvent(event);
-    } catch (error) {
-      return false;
-    }
-  },
+  skipVerify: true,
+  verifier: noopVerifier,
 });
 
 // keep track of all relay connection states
