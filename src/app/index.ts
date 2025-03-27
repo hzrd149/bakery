@@ -55,6 +55,7 @@ import { getDMRecipient } from "../helpers/direct-messages.js";
 import { onConnection, onJSONMessage } from "../helpers/ws.js";
 import QueryManager from "../modules/queries/manager.js";
 import "../modules/queries/queries/index.js";
+import bakerySigner from "../services/bakery.js";
 
 type EventMap = {
   listening: [];
@@ -98,16 +99,12 @@ export default class App extends EventEmitter<EventMap> {
 
     this.secrets = secrets;
 
-    this.signer = new SimpleSigner(this.secrets.get("nostrKey"));
+    this.signer = bakerySigner;
 
     // copy the vapid public key over to config so the web ui can access it
     // TODO: this should be moved to another place
     this.secrets.on("updated", () => {
       this.config.data.vapidPublicKey = this.secrets.get("vapidPublicKey");
-
-      if (this.signer.key !== this.secrets.get("nostrKey")) {
-        this.signer = new SimpleSigner(this.secrets.get("nostrKey"));
-      }
     });
 
     // set owner pubkey from env variable

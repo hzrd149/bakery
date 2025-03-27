@@ -14,6 +14,15 @@ server.resource("owner pubkey", "pubkey://owner", async (uri) => ({
   ],
 }));
 
+server.resource("config", "config://app", async (uri) => ({
+  contents: [
+    {
+      uri: uri.href,
+      text: JSON.stringify(config.data, null, 2),
+    },
+  ],
+}));
+
 server.resource(
   "user profile",
   new ResourceTemplate("users://{pubkey}/profile", { list: undefined }),

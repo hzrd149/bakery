@@ -12,6 +12,7 @@ import App from "./app/index.js";
 import { PUBLIC_ADDRESS, IS_MCP } from "./env.js";
 import { addListener, logger } from "./logger.js";
 import { pathExists } from "./helpers/fs.js";
+import "./services/owner.js";
 
 // add durations plugin
 dayjs.extend(duration);

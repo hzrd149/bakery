@@ -77,7 +77,7 @@ export class MigrationSet {
         // save the migration
         database.transaction(() => {
           const result = database
-            .prepare<[string, number, number]>(`INSERT INTO migrations (name, version, date) VALUES (?1, ?2, ?3)`)
+            .prepare<[string, number, number]>(`INSERT INTO migrations (name, version, date) VALUES (?, ?, ?)`)
             .run(this.name, script.version, unixNow());
 
           const insertLog = database.prepare<[number | bigint, string]>(

@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { Observable, Subject, Subscription } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 import { logger } from "../../logger.js";
 import { Query, QueryClose, QueryData, QueryError } from "./types.js";
 

@@ -1,7 +1,10 @@
+import { Observable } from "rxjs";
 import _throttle from "lodash.throttle";
 import { generateSecretKey } from "nostr-tools";
-import EventEmitter from "events";
+import { SerializedAccount } from "applesauce-accounts";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
+import { NostrConnectAccountSignerData } from "applesauce-accounts/accounts";
+import EventEmitter from "events";
 import webPush from "web-push";
 import crypto from "crypto";
 import fs from "fs";
@@ -10,6 +13,7 @@ import { logger } from "../logger.js";
 
 type Secrets = {
   nostrKey: Uint8Array;
+  ownerAccount?: SerializedAccount<NostrConnectAccountSignerData, any>;
   vapidPrivateKey: string;
   vapidPublicKey: string;
   hyperKey: Buffer;
@@ -18,6 +22,7 @@ type Secrets = {
 };
 type RawJson = Partial<{
   nostrKey: string;
+  ownerAccount?: SerializedAccount<NostrConnectAccountSignerData, any>;
   vapidPrivateKey: string;
   vapidPublicKey: string;
   hyperKey: string;
@@ -56,6 +61,17 @@ export default class SecretsManager extends EventEmitter<EventMap> {
     this.emit("changed", secret, value);
     this.emit("updated");
     this.write();
+  }
+
+  /** Subscribe to the value of a secret */
+  watch<T extends keyof Secrets>(key: T): Observable<Secrets[T]> {
+    return new Observable((observer) => {
+      observer.next(this.get(key));
+
+      this.on("changed", (k, value) => {
+        if (k === key) observer.next(value);
+      });
+    });
   }
 
   read() {
@@ -97,6 +113,8 @@ export default class SecretsManager extends EventEmitter<EventMap> {
     secrets.i2pPrivateKey = json.i2pPrivateKey;
     secrets.i2pPublicKey = json.i2pPublicKey;
 
+    secrets.ownerAccount = json.ownerAccount;
+
     this.secrets = secrets;
 
     this.emit("loaded");
@@ -116,6 +134,7 @@ export default class SecretsManager extends EventEmitter<EventMap> {
       hyperKey: this.secrets.hyperKey?.toString("hex"),
       i2pPrivateKey: this.secrets.i2pPrivateKey,
       i2pPublicKey: this.secrets.i2pPublicKey,
+      ownerAccount: this.secrets.ownerAccount,
     };
 
     fs.writeFileSync(this.path, JSON.stringify(json, null, 2), { encoding: "utf-8" });
