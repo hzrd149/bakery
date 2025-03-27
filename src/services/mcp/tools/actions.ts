@@ -5,7 +5,7 @@ import { FollowUser, UnfollowUser } from "applesauce-actions/actions";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 
 server.tool(
-  "Follow user",
+  "follow_user",
   "Adds another users pubkey to the owners following list",
   { pubkey: z.string().transform((hex) => normalizeToHexPubkey(hex, true)) },
   async ({ pubkey }) => {
@@ -19,7 +19,7 @@ server.tool(
 );
 
 server.tool(
-  "Unfollow user",
+  "unfollow_user",
   "Removes another users pubkey from the owners following list",
   { pubkey: z.string().transform((hex) => normalizeToHexPubkey(hex, true)) },
   async ({ pubkey }) => {

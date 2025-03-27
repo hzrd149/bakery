@@ -11,7 +11,7 @@ import config from "../../config.js";
 import { lastValueFrom, toArray } from "rxjs";
 
 server.tool(
-  "Sign draft event",
+  "sign_draft_event",
   "Signs a draft note event with the owners pubkey",
   {
     draft: z.object({
@@ -35,7 +35,7 @@ server.tool(
 );
 
 server.tool(
-  "Publish event",
+  "publish_event",
   "Publishes an event to the owners outbox relays",
   {
     event: z.object({

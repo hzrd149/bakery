@@ -6,7 +6,7 @@ import { NostrConnectSigner } from "applesauce-signers";
 import { NostrConnectAccount } from "applesauce-accounts/accounts";
 
 server.tool(
-  "Set owner nostr connect URI",
+  "set_owner_nostr_connect_uri",
   "Sets the nostr connect URI that should be used to request signatures from the owners pubkey",
   { uri: z.string().startsWith("bunker://") },
   async ({ uri }) => {
