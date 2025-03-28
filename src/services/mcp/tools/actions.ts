@@ -1,12 +1,12 @@
 import z from "zod";
 import { FollowUser, PinNote, UnfollowUser, UnpinNote, UpdateProfile } from "applesauce-actions/actions";
 
-import server from "../server.js";
+import mcpServer from "../server.js";
 import { ownerActions, ownerPublish } from "../../owner.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 import eventCache from "../../event-cache.js";
 
-server.tool(
+mcpServer.tool(
   "follow_user",
   "Adds another users pubkey to the owners following list",
   {
@@ -25,7 +25,7 @@ server.tool(
   },
 );
 
-server.tool(
+mcpServer.tool(
   "unfollow_user",
   "Removes another users pubkey from the owners following list",
   {
@@ -44,7 +44,7 @@ server.tool(
   },
 );
 
-server.tool(
+mcpServer.tool(
   "pin_note",
   "Pins a kind 1 note to the owners pinned notes list",
   {
@@ -59,7 +59,7 @@ server.tool(
   },
 );
 
-server.tool(
+mcpServer.tool(
   "unpin_note",
   "Unpins a kind 1 note from the owners pinned notes list",
   {
@@ -74,7 +74,7 @@ server.tool(
   },
 );
 
-server.tool(
+mcpServer.tool(
   "set_profile_field",
   "Sets a field in the owners profile",
   {

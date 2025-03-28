@@ -3,14 +3,14 @@ import { getProfileContent } from "applesauce-core/helpers";
 import { kinds } from "nostr-tools";
 import z from "zod";
 
-import server from "../server.js";
+import mcpServer from "../server.js";
 import { ownerFactory, ownerPublish } from "../../owner.js";
 import { requestLoader } from "../../loaders.js";
 import bakeryConfig from "../../config.js";
 import eventCache from "../../event-cache.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 
-server.tool(
+mcpServer.tool(
   "sign_draft_event",
   "Signs a draft note event with the owners pubkey",
   {
@@ -34,7 +34,7 @@ server.tool(
   },
 );
 
-server.tool(
+mcpServer.tool(
   "publish_event",
   "Publishes a signed nostr event to the relays or the users outbox relays",
   {
@@ -67,7 +67,7 @@ server.tool(
   },
 );
 
-server.tool(
+mcpServer.tool(
   "search_events",
   "Search for events of a certain kind that contain the query",
   { query: z.string(), kind: z.number().default(1), limit: z.number().default(50) },
@@ -81,7 +81,7 @@ server.tool(
 );
 
 // TODO: this needs to accept naddr, and nevent
-server.tool("get_event", "Get an event by id", { id: z.string().length(64) }, async ({ id }) => {
+mcpServer.tool("get_event", "Get an event by id", { id: z.string().length(64) }, async ({ id }) => {
   const event = await eventCache.getEventsForFilters([{ ids: [id] }]);
 
   return {
@@ -89,7 +89,7 @@ server.tool("get_event", "Get an event by id", { id: z.string().length(64) }, as
   };
 });
 
-server.tool(
+mcpServer.tool(
   "search_user_pubkey",
   "Search for users pubkeys that match the query",
   { query: z.string(), limit: z.number().default(10) },
@@ -119,7 +119,7 @@ server.tool(
   },
 );
 
-server.tool(
+mcpServer.tool(
   "get_users_recent_events",
   "Gets a list of recent events created by a pubkey",
   {
@@ -141,7 +141,7 @@ server.tool(
   },
 );
 
-server.tool(
+mcpServer.tool(
   "get_events_pubkey_mentioned",
   "Gets a list of recent events that the pubkey was mentioned in",
   {

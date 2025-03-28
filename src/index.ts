@@ -2,11 +2,13 @@
 import "./polyfill.js";
 import process from "node:process";
 import path from "node:path";
-
 import express, { Request } from "express";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration.js";
 import localizedFormat from "dayjs/plugin/localizedFormat.js";
+
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import mcpServer from "./services/mcp/index.js";
 
 import App from "./app/index.js";
 import { PUBLIC_ADDRESS, IS_MCP } from "./env.js";
@@ -72,12 +74,9 @@ await app.start();
 
 // Setup MCP interface on stdio
 if (IS_MCP) {
-  const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
-  const { default: server } = await import("./services/mcp/index.js");
-
   // connect MCP server to stdio
   const transport = new StdioServerTransport();
-  await server.connect(transport);
+  await mcpServer.connect(transport);
 }
 
 // shutdown process

@@ -34,6 +34,7 @@ export function startSignerSetup(relays = DEFAULT_NOSTR_CONNECT_RELAYS) {
   const p = signer.waitForSigner().then(async () => {
     const pubkey = await signer.getPublicKey();
     ownerAccount$.next(new NostrConnectAccount(pubkey, signer));
+    bakeryConfig.setField("owner", pubkey);
     setupSigner$.next(undefined);
   });
 

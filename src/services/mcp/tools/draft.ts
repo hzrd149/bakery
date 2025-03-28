@@ -3,7 +3,7 @@ import { NoteBlueprint } from "applesauce-factory/blueprints";
 import { EventTemplate } from "nostr-tools";
 import { z } from "zod";
 
-import server from "../server.js";
+import mcpServer from "../server.js";
 import { ownerFactory } from "../../owner.js";
 
 async function returnUnsigned(draft: EventTemplate | Promise<EventTemplate>): Promise<CallToolResult> {
@@ -12,7 +12,7 @@ async function returnUnsigned(draft: EventTemplate | Promise<EventTemplate>): Pr
   };
 }
 
-server.tool(
+mcpServer.tool(
   "short_text_note_draft",
   "Create a short text note draft event",
   {
