@@ -12,7 +12,7 @@ import { logger } from "../logger.js";
 import Database from "./database.js";
 
 import { NIP_11_SOFTWARE_URL, SENSITIVE_KINDS } from "../const.js";
-import { OWNER_PUBKEY, PORT } from "../env.js";
+import { OWNER_PUBKEY, BAKERY_PORT } from "../env.js";
 
 import ControlApi from "../modules/control/control-api.js";
 import ConfigActions from "../modules/control/config-actions.js";
@@ -373,9 +373,9 @@ export default class App extends EventEmitter<EventMap> {
     this.tick();
 
     // start http server listening
-    await new Promise<void>((res) => this.server.listen(PORT, () => res()));
+    await new Promise<void>((res) => this.server.listen(BAKERY_PORT, () => res()));
 
-    logger(`Listening on`, PORT);
+    logger(`Listening on`, BAKERY_PORT);
 
     if (process.send) process.send({ type: "RELAY_READY" });
 

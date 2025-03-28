@@ -2,6 +2,7 @@ import EventEmitter from "events";
 import Database, { type Database as SQLDatabase } from "better-sqlite3";
 import path from "path";
 import fs from "fs";
+import { DATA_PATH } from "../env.js";
 
 export type LocalDatabaseConfig = {
   directory: string;
@@ -19,7 +20,7 @@ export default class LocalDatabase extends EventEmitter {
     super();
 
     this.config = {
-      directory: "data",
+      directory: DATA_PATH,
       name: "events",
       wal: true,
       ...config,

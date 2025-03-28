@@ -13,7 +13,7 @@ export const PUBLIC_ADDRESS = process.env.PUBLIC_ADDRESS;
 export const DATA_PATH = process.env.DATA_PATH || join(homedir(), ".bakery");
 await mkdirp(DATA_PATH);
 
-export const PORT = parseInt(args.values.port ?? process.env.PORT ?? "") || DEFAULT_PORT;
+export const BAKERY_PORT = parseInt(args.values.port ?? process.env.BAKERY_PORT ?? "") || DEFAULT_PORT;
 
 // I2P config
 export const I2P_PROXY = process.env.I2P_PROXY;
