@@ -3,7 +3,7 @@ import { ReplaceableQuery, UserContactsQuery } from "applesauce-core/queries";
 import { getObservableValue, simpleTimeout } from "applesauce-core/observable";
 
 import { logger } from "../logger.js";
-import { COMMON_CONTACT_RELAYS } from "../env.js";
+import { LOOKUP_RELAYS } from "../env.js";
 import { replaceableLoader } from "../services/loaders.js";
 import { eventStore, queryStore } from "../services/stores.js";
 import { arrayFallback } from "../helpers/array.js";
@@ -34,7 +34,7 @@ export default class ContactBook {
   }
 
   async loadContacts(pubkey: string, relays?: string[], force?: boolean) {
-    relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
+    relays = arrayFallback(relays, LOOKUP_RELAYS);
     replaceableLoader.next({ kind: kinds.Contacts, pubkey, relays, force });
 
     return getObservableValue(
@@ -46,7 +46,7 @@ export default class ContactBook {
 
   /** @deprecated */
   async loadContactsEvent(pubkey: string, relays?: string[]) {
-    relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
+    relays = arrayFallback(relays, LOOKUP_RELAYS);
     replaceableLoader.next({ kind: kinds.Contacts, pubkey, relays });
 
     return getObservableValue(

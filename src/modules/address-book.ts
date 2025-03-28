@@ -4,7 +4,7 @@ import { getObservableValue, simpleTimeout } from "applesauce-core/observable";
 import { getInboxes, getOutboxes } from "applesauce-core/helpers";
 
 import { logger } from "../logger.js";
-import { COMMON_CONTACT_RELAYS } from "../env.js";
+import { LOOKUP_RELAYS } from "../env.js";
 import { replaceableLoader } from "../services/loaders.js";
 import { eventStore, queryStore } from "../services/stores.js";
 import { arrayFallback } from "../helpers/array.js";
@@ -28,7 +28,7 @@ export default class AddressBook {
   }
 
   async loadMailboxes(pubkey: string, relays?: string[], force?: boolean) {
-    relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
+    relays = arrayFallback(relays, LOOKUP_RELAYS);
     replaceableLoader.next({ kind: kinds.RelayList, pubkey, relays, force });
 
     return getObservableValue(

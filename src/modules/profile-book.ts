@@ -2,7 +2,7 @@ import { kinds } from "nostr-tools";
 import { getObservableValue, simpleTimeout } from "applesauce-core/observable";
 import { ProfileQuery } from "applesauce-core/queries";
 
-import { COMMON_CONTACT_RELAYS } from "../env.js";
+import { LOOKUP_RELAYS } from "../env.js";
 import { logger } from "../logger.js";
 import { replaceableLoader } from "../services/loaders.js";
 import { eventStore, queryStore } from "../services/stores.js";
@@ -19,7 +19,7 @@ export default class ProfileBook {
   }
 
   async loadProfile(pubkey: string, relays?: string[], force?: boolean) {
-    relays = arrayFallback(relays, COMMON_CONTACT_RELAYS);
+    relays = arrayFallback(relays, LOOKUP_RELAYS);
     replaceableLoader.next({ kind: kinds.Metadata, pubkey, relays, force });
 
     return getObservableValue(

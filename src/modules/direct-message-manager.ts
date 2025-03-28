@@ -9,7 +9,7 @@ import type App from "../app/index.js";
 import { arrayFallback } from "../helpers/array.js";
 import { rxNostr } from "../services/rx-nostr.js";
 import { eventStore, queryStore } from "../services/stores.js";
-import { COMMON_CONTACT_RELAYS } from "../env.js";
+import { LOOKUP_RELAYS } from "../env.js";
 import { bufferAudit } from "../helpers/rxjs.js";
 import { getRelaysFromContactList } from "../helpers/contacts.js";
 
@@ -83,7 +83,7 @@ export default class DirectMessageManager extends EventEmitter<EventMap> {
   async watchInbox(pubkey: string) {
     if (this.watching.has(pubkey)) return;
 
-    this.app.addressBook.loadMailboxes(pubkey, COMMON_CONTACT_RELAYS, true);
+    this.app.addressBook.loadMailboxes(pubkey, LOOKUP_RELAYS, true);
 
     this.log(`Watching ${pubkey} inboxes for mail`);
     const subscription = queryStore

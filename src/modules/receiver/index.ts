@@ -3,7 +3,7 @@ import { NostrEvent, SimplePool } from "nostr-tools";
 import { Subscription } from "nostr-tools/abstract-relay";
 import { getRelaysFromContactsEvent } from "applesauce-core/helpers";
 
-import { BOOTSTRAP_RELAYS, COMMON_CONTACT_RELAYS } from "../../env.js";
+import { BOOTSTRAP_RELAYS, LOOKUP_RELAYS } from "../../env.js";
 import { logger } from "../../logger.js";
 import App from "../../app/index.js";
 import { arrayFallback } from "../../helpers/array.js";
@@ -61,7 +61,7 @@ export default class Receiver extends EventEmitter<EventMap> {
     const owner = this.app.config.data.owner;
     if (!owner) throw new Error("Missing owner");
 
-    const commonMailboxesRelays = [...BOOTSTRAP_RELAYS, ...COMMON_CONTACT_RELAYS];
+    const commonMailboxesRelays = [...BOOTSTRAP_RELAYS, ...LOOKUP_RELAYS];
 
     const ownerMailboxes = await requestLoader.mailboxes({ pubkey: owner, relays: commonMailboxesRelays }, true);
 
