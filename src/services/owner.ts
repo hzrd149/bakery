@@ -101,13 +101,8 @@ export async function ownerPublish(event: NostrEvent, relays?: string[]) {
   eventCache.addEvent(event);
 
   // publish event to owners outboxes
-  if (bakeryConfig.data.owner) {
-    try {
-      relays = relays || (await requestLoader.mailboxes({ pubkey: bakeryConfig.data.owner })).outboxes;
-      return await lastValueFrom(rxNostr.send(event, { on: { relays } }).pipe(toArray()));
-    } catch (error) {
-      // Failed to publish to outboxes, ignore error for now
-      // TODO: this should retried at some point
-    }
-  }
+  if (!relays && bakeryConfig.data.owner)
+    relays = (await requestLoader.mailboxes({ pubkey: bakeryConfig.data.owner })).outboxes;
+
+  return await lastValueFrom(rxNostr.send(event, { on: { relays } }).pipe(toArray()));
 }

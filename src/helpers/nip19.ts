@@ -13,3 +13,22 @@ export function normalizeToHexPubkey(hex: string, require = false): string | nul
     else return null;
   }
 }
+
+export function normalizeToEventId(str: string, require?: boolean): string | null;
+export function normalizeToEventId(str: string, require: true): string;
+export function normalizeToEventId(str: string, require = false): string | null {
+  try {
+    const decode = nip19.decode(str);
+    switch (decode.type) {
+      case "note":
+        return decode.data;
+      case "nevent":
+        return decode.data.id;
+      default:
+        throw new Error(`Cant get event id from ${decode.type}`);
+    }
+  } catch (error) {
+    if (require) throw error;
+    else return null;
+  }
+}

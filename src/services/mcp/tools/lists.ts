@@ -1,5 +1,5 @@
 import z from "zod";
-import { FollowUser, PinNote, UnfollowUser, UnpinNote, UpdateProfile } from "applesauce-actions/actions";
+import { FollowUser, PinNote, UnfollowUser, UnpinNote } from "applesauce-actions/actions";
 
 import mcpServer from "../server.js";
 import { ownerActions, ownerPublish } from "../../owner.js";
@@ -71,18 +71,5 @@ mcpServer.tool(
 
     await ownerActions.exec(UnpinNote, event).forEach(ownerPublish);
     return { content: [{ type: "text", text: "Unpinned note" }] };
-  },
-);
-
-mcpServer.tool(
-  "set_profile_field",
-  "Sets a field in the owners profile",
-  {
-    field: z.enum(["name", "about", "picture", "nip05", "website"]).describe("The field to set"),
-    value: z.string().describe("The value to set the field to"),
-  },
-  async ({ field, value }) => {
-    await ownerActions.exec(UpdateProfile, { [field]: value }).forEach(ownerPublish);
-    return { content: [{ type: "text", text: "Set profile field" }] };
   },
 );

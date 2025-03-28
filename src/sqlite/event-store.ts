@@ -210,9 +210,7 @@ export class SQLiteEventStore extends EventEmitter<EventMap> {
       // before inserting it into the database
 
       // get event d value so it can be indexed
-      const d = kinds.isParameterizedReplaceableKind(event.kind)
-        ? event.tags.find((t) => t[0] === "d" && t[1])?.[1]
-        : undefined;
+      const d = kinds.isAddressableKind(event.kind) ? event.tags.find((t) => t[0] === "d" && t[1])?.[1] : undefined;
 
       const insert = this.db
         .prepare(
@@ -277,8 +275,6 @@ export class SQLiteEventStore extends EventEmitter<EventMap> {
               })
               .slice(1)
               .map((item) => item.id);
-
-            if (!removeIds.includes(event.id)) this.log("Removed", removeIds.length, "old replaceable events");
 
             this.removeEvents(removeIds);
 
