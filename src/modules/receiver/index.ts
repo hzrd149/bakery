@@ -100,7 +100,6 @@ export default class Receiver extends EventEmitter<EventMap> {
 
         // if the user does not have any mailboxes try to get the relays stored in the contact list
         if (relays.length === 0) {
-          this.log(`Failed to find mailboxes for ${person.pubkey}`);
           const contacts = await this.app.contactBook.loadContactsEvent(
             person.pubkey,
             arrayFallback(ownerMailboxes?.inboxes, BOOTSTRAP_RELAYS),

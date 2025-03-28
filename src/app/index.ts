@@ -14,7 +14,6 @@ import Database from "./database.js";
 import { NIP_11_SOFTWARE_URL, SENSITIVE_KINDS } from "../const.js";
 import { OWNER_PUBKEY, PORT } from "../env.js";
 
-import ConfigManager from "../modules/config/config-manager.js";
 import ControlApi from "../modules/control/control-api.js";
 import ConfigActions from "../modules/control/config-actions.js";
 import ReceiverActions from "../modules/control/receiver-actions.js";
@@ -43,7 +42,7 @@ import Switchboard from "../modules/switchboard/switchboard.js";
 import Gossip from "../modules/gossip.js";
 import database from "../services/database.js";
 import secrets from "../services/secrets.js";
-import config from "../services/config.js";
+import bakeryConfig from "../services/config.js";
 import logStore from "../services/log-store.js";
 import stateManager from "../services/state.js";
 import eventCache from "../services/event-cache.js";
@@ -63,7 +62,7 @@ type EventMap = {
 
 export default class App extends EventEmitter<EventMap> {
   running = false;
-  config: ConfigManager;
+  config: typeof bakeryConfig;
   secrets: SecretsManager;
   state: ApplicationStateManager;
   signer: SimpleSigner;
@@ -95,17 +94,11 @@ export default class App extends EventEmitter<EventMap> {
   constructor() {
     super();
 
-    this.config = config;
+    this.config = bakeryConfig;
 
     this.secrets = secrets;
 
     this.signer = bakerySigner;
-
-    // copy the vapid public key over to config so the web ui can access it
-    // TODO: this should be moved to another place
-    this.secrets.on("updated", () => {
-      this.config.data.vapidPublicKey = this.secrets.get("vapidPublicKey");
-    });
 
     // set owner pubkey from env variable
     if (!this.config.data.owner && OWNER_PUBKEY) {

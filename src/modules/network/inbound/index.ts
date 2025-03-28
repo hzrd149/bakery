@@ -1,8 +1,7 @@
 import { Server } from "http";
 import { logger } from "../../../logger.js";
 import { getIPAddresses } from "../../../helpers/ip.js";
-import ConfigManager from "../../config/config-manager.js";
-import config from "../../../services/config.js";
+import bakeryConfig from "../../../services/config.js";
 
 import TorInbound from "./tor.js";
 import I2PInbound from "./i2p.js";
@@ -29,7 +28,7 @@ export default class InboundNetworkManager {
     this.tor = new TorInbound();
     this.i2p = new I2PInbound();
 
-    this.listenToAppConfig(config);
+    this.listenToAppConfig(bakeryConfig);
   }
 
   private getAddress() {
@@ -41,7 +40,7 @@ export default class InboundNetworkManager {
     return address;
   }
 
-  private update(cfg = config.data) {
+  private update(cfg = bakeryConfig.data) {
     if (!this.running) return;
     const address = this.getAddress();
 
@@ -60,7 +59,7 @@ export default class InboundNetworkManager {
   }
 
   /** A helper method to make the manager run off of the app config */
-  listenToAppConfig(config: ConfigManager) {
+  listenToAppConfig(config: typeof bakeryConfig) {
     config.on("updated", this.update.bind(this));
   }
 

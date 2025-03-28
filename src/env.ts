@@ -1,17 +1,19 @@
 import "dotenv/config";
 import { mkdirp } from "mkdirp";
 import { normalizeURL } from "applesauce-core/helpers";
+import { homedir } from "os";
+import { join } from "path";
 
-import { OUTBOUND_PROXY_TYPES } from "./const.js";
+import { DEFAULT_PORT, OUTBOUND_PROXY_TYPES } from "./const.js";
 import { normalizeToHexPubkey } from "./helpers/nip19.js";
 import args from "./args.js";
 
 export const OWNER_PUBKEY = process.env.OWNER_PUBKEY ? normalizeToHexPubkey(process.env.OWNER_PUBKEY) : undefined;
 export const PUBLIC_ADDRESS = process.env.PUBLIC_ADDRESS;
-export const DATA_PATH = process.env.DATA_PATH || "./data";
+export const DATA_PATH = process.env.DATA_PATH || join(homedir(), ".bakery");
 await mkdirp(DATA_PATH);
 
-export const PORT = parseInt(args.values.port ?? process.env.PORT ?? "") || 3000;
+export const PORT = parseInt(args.values.port ?? process.env.PORT ?? "") || DEFAULT_PORT;
 
 // I2P config
 export const I2P_PROXY = process.env.I2P_PROXY;

@@ -6,7 +6,7 @@ import z from "zod";
 import server from "../server.js";
 import { ownerFactory, ownerPublish } from "../../owner.js";
 import { requestLoader } from "../../loaders.js";
-import config from "../../config.js";
+import bakeryConfig from "../../config.js";
 import eventCache from "../../event-cache.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 
@@ -52,9 +52,9 @@ server.tool(
     relays: z.array(z.string().url()).optional().describe("An array of relays to publish to"),
   },
   async ({ event, relays }) => {
-    if (!config.data.owner) throw new Error("Owner not set");
+    if (!bakeryConfig.data.owner) throw new Error("Owner not set");
 
-    relays = relays || (await requestLoader.mailboxes({ pubkey: config.data.owner })).outboxes;
+    relays = relays || (await requestLoader.mailboxes({ pubkey: bakeryConfig.data.owner })).outboxes;
     const results = await ownerPublish(event, relays);
     if (!results) throw new Error("Failed to publish event to relays");
 

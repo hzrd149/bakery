@@ -35,6 +35,7 @@ export default class ConfigActions implements ControlMessageHandler {
         const field = message[3];
         const value = message[4];
 
+        // @ts-expect-error
         this.app.config.setField(field, value);
         return true;
 

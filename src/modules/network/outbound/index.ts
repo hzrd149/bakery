@@ -2,10 +2,10 @@ import { PacProxyAgent } from "pac-proxy-agent";
 import _throttle from "lodash.throttle";
 
 import { logger } from "../../../logger.js";
-import ConfigManager from "../../config/config-manager.js";
 import HyperOutbound from "./hyper.js";
 import TorOutbound from "./tor.js";
 import I2POutbound from "./i2p.js";
+import bakeryConfig from "../../../services/config.js";
 
 export default class OutboundNetworkManager {
   log = logger.extend("Network:Outbound");
@@ -95,7 +95,7 @@ function FindProxyForURL(url, host)
   updateAgentThrottle: () => void = _throttle(this.updateAgent.bind(this), 100);
 
   /** A helper method to make the manager run off of the app config */
-  listenToAppConfig(config: ConfigManager) {
+  listenToAppConfig(config: typeof bakeryConfig) {
     config.on("updated", (c) => {
       this.enableHyperConnections = c.hyperEnabled && c.enableHyperConnections;
       this.enableTorConnections = c.enableTorConnections;

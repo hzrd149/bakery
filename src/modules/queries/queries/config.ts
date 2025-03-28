@@ -1,13 +1,12 @@
 import { Observable } from "rxjs";
-import { PrivateNodeConfig } from "@satellite-earth/core/types";
 
 import { Query } from "../types.js";
-import config from "../../../services/config.js";
+import bakeryConfig, { BakeryConfig } from "../../../services/config.js";
 
-export const ConfigQuery: Query<PrivateNodeConfig> = () =>
+export const ConfigQuery: Query<BakeryConfig> = () =>
   new Observable((observer) => {
-    observer.next(config.data);
-    const listener = (c: PrivateNodeConfig) => observer.next(c);
-    config.on("updated", listener);
-    return () => config.off("updated", listener);
+    observer.next(bakeryConfig.data);
+    const listener = (c: BakeryConfig) => observer.next(c);
+    bakeryConfig.on("updated", listener);
+    return () => bakeryConfig.off("updated", listener);
   });

@@ -8,7 +8,7 @@ import webPush from "web-push";
 import { logger } from "../../logger.js";
 import App from "../../app/index.js";
 import stateManager from "../../services/state.js";
-import config from "../../services/config.js";
+import bakeryConfig from "../../services/config.js";
 import { getDMRecipient, getDMSender } from "../../helpers/direct-messages.js";
 
 export type NotificationsManagerState = {
@@ -73,7 +73,7 @@ export default class NotificationsManager extends EventEmitter<EventMap> {
   /** Whether a notification should be sent */
   shouldNotify(event: NostrEvent) {
     if (event.kind !== kinds.EncryptedDirectMessage) return;
-    if (getDMRecipient(event) !== config.data.owner) return;
+    if (getDMRecipient(event) !== bakeryConfig.data.owner) return;
 
     if (event.created_at > this.lastRead) return true;
   }

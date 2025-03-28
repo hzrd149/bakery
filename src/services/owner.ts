@@ -10,16 +10,45 @@ import { nostrConnectPublish, nostrConnectSubscription } from "../helpers/apples
 import { NostrEvent } from "nostr-tools";
 import eventCache from "./event-cache.js";
 import { requestLoader } from "./loaders.js";
-import config from "./config.js";
+import bakeryConfig from "./config.js";
 import { rxNostr } from "./rx-nostr.js";
 import { logger } from "../logger.js";
 import { NostrConnectAccount } from "applesauce-accounts/accounts";
+import { DEFAULT_NOSTR_CONNECT_RELAYS } from "../const.js";
 
 NostrConnectSigner.subscriptionMethod = nostrConnectSubscription;
 NostrConnectSigner.publishMethod = nostrConnectPublish;
 
 const log = logger.extend("Owner");
 
+/** A temp signer while the owner is setting up their signer */
+export const setupSigner$ = new BehaviorSubject<NostrConnectSigner | undefined>(undefined);
+
+export function startSignerSetup(relays = DEFAULT_NOSTR_CONNECT_RELAYS) {
+  if (setupSigner$.value) return setupSigner$.value;
+
+  const signer = new NostrConnectSigner({ relays });
+  setupSigner$.next(signer);
+
+  // async setup process
+  const p = signer.waitForSigner().then(async () => {
+    const pubkey = await signer.getPublicKey();
+    ownerAccount$.next(new NostrConnectAccount(pubkey, signer));
+    setupSigner$.next(undefined);
+  });
+
+  return p;
+}
+
+export async function stopSignerSetup() {
+  const signer = setupSigner$.getValue();
+  if (signer) {
+    signer.close();
+    setupSigner$.next(undefined);
+  }
+}
+
+/** The owner's account */
 export const ownerAccount$ = new BehaviorSubject<NostrConnectAccount<any> | undefined>(undefined);
 
 // Update account when secrets change
@@ -71,9 +100,9 @@ export async function ownerPublish(event: NostrEvent, relays?: string[]) {
   eventCache.addEvent(event);
 
   // publish event to owners outboxes
-  if (config.data.owner) {
+  if (bakeryConfig.data.owner) {
     try {
-      relays = relays || (await requestLoader.mailboxes({ pubkey: config.data.owner })).outboxes;
+      relays = relays || (await requestLoader.mailboxes({ pubkey: bakeryConfig.data.owner })).outboxes;
       return await lastValueFrom(rxNostr.send(event, { on: { relays } }).pipe(toArray()));
     } catch (error) {
       // Failed to publish to outboxes, ignore error for now

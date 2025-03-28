@@ -57,12 +57,14 @@ app.express.get("*", (req, res) => {
   res.sendFile(path.resolve(appDir, "index.html"));
 });
 
-// log uncaught errors
+// catch unhandled errors
+process.on("uncaughtException", (error) => {
+  if (!IS_MCP) console.error("Uncaught Exception:", error);
+});
+
+// Catch unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
-  if (reason instanceof Error) {
-    console.log("Unhandled Rejection");
-    console.log(reason);
-  } else console.log("Unhandled Rejection at:", promise, "reason:", reason);
+  if (!IS_MCP) console.error("Unhandled Promise Rejection:", reason);
 });
 
 // start the app
@@ -87,13 +89,3 @@ async function shutdown() {
 }
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
-
-// catch unhandled errors
-process.on("uncaughtException", (error) => {
-  if (!IS_MCP) console.error("Uncaught Exception:", error);
-});
-
-// 2. Catch unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-  if (!IS_MCP) console.error("Unhandled Promise Rejection:", reason);
-});
