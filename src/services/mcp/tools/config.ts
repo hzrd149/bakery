@@ -5,12 +5,11 @@ server.tool("get_bakery_config", "Gets the current configuration for the bakery"
   return { content: [{ type: "text", text: JSON.stringify(bakeryConfig.data) }] };
 });
 
-server.tool<typeof bakeryConfigSchema.shape>(
+server.tool(
   "update_bakery_config",
   "Updates the bakery config with the provided config",
-  // @ts-expect-error
-  bakeryConfigSchema.partial(),
-  async (config) => {
+  { config: bakeryConfigSchema.partial().describe("A partial config to update") },
+  async ({ config }) => {
     bakeryConfig.update((data) => {
       return { ...data, ...config };
     });

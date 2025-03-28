@@ -1,12 +1,11 @@
 import { NostrConnectSigner } from "applesauce-signers/signers/nostr-connect-signer";
 import { NostrConnectAccount } from "applesauce-accounts/accounts/nostr-connect-account";
+import qrcode from "qrcode-terminal";
 import { z } from "zod";
 
 import server from "../server.js";
 import { ownerAccount$, setupSigner$, startSignerSetup, stopSignerSetup } from "../../owner.js";
 import { DEFAULT_NOSTR_CONNECT_RELAYS } from "../../../const.js";
-
-const qrcode = require("qrcode-terminal");
 
 server.tool(
   "connect_nostr_signer",

@@ -6,8 +6,8 @@ import { DATA_PATH } from "../env.js";
 import { ReactiveJsonFile } from "../classes/json-file.js";
 
 export const bakeryConfigSchema = z.object({
-  name: z.string().default(""),
-  description: z.string().default(""),
+  name: z.string().default("").describe("The name of the bakery node"),
+  description: z.string().default("").describe("A short description of the bakery node"),
 
   owner: z.string().optional(),
   public_address: z.string().url().optional(),
