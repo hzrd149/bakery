@@ -1,3 +1,4 @@
+import { ISyncEventStore } from "applesauce-core";
 import { Database } from "better-sqlite3";
 import { Filter, NostrEvent, kinds } from "nostr-tools";
 import EventEmitter from "events";
@@ -184,7 +185,7 @@ type EventMap = {
   "event:removed": [string];
 };
 
-export class SQLiteEventStore extends EventEmitter<EventMap> {
+export class SQLiteEventStore extends EventEmitter<EventMap> implements ISyncEventStore {
   db: Database;
   log = logger.extend("sqlite-event-store");
 
@@ -330,20 +331,7 @@ export class SQLiteEventStore extends EventEmitter<EventMap> {
     }
   }
 
-  removeEvent(id: string) {
-    const results = this.db.transaction(() => {
-      this.db.prepare(`DELETE FROM tags WHERE e = ?`).run(id);
-      this.db.prepare(`DELETE FROM events_fts WHERE id = ?`).run(id);
-
-      return this.db.prepare(`DELETE FROM events WHERE events.id = ?`).run(id);
-    })();
-
-    if (results.changes > 0) this.emit("event:removed", id);
-
-    return results.changes > 0;
-  }
-
-  buildConditionsForFilters(filter: Filter) {
+  protected buildConditionsForFilters(filter: Filter) {
     const joins: string[] = [];
     const conditions: string[] = [];
     const parameters: (string | number)[] = [];
@@ -482,6 +470,39 @@ export class SQLiteEventStore extends EventEmitter<EventMap> {
     }
 
     return { sql, parameters };
+  }
+
+  hasEvent(id: string): boolean {
+    return this.db.prepare<[string], { id: string }>(`SELECT id FROM events WHERE id = ?`).get(id) !== undefined;
+  }
+
+  getEvent(id: string): NostrEvent | undefined {
+    const row = this.db.prepare<[string], EventRow>(`SELECT * FROM events WHERE id = ?`).get(id);
+    if (!row) return undefined;
+    return parseEventRow(row);
+  }
+
+  hasReplaceable(kind: number, pubkey: string, identifier?: string): boolean {
+    return this.getReplaceable(kind, pubkey, identifier) !== undefined;
+  }
+
+  getReplaceable(kind: number, pubkey: string, identifier?: string): NostrEvent | undefined {
+    const filter: Filter = { kinds: [kind], authors: [pubkey], limit: 1 };
+    if (identifier) filter["#d"] = [identifier];
+    return this.getEventsForFilters([filter])[0];
+  }
+
+  getReplaceableHistory(kind: number, pubkey: string, identifier?: string): NostrEvent[] {
+    const filter: Filter = { kinds: [kind], authors: [pubkey] };
+    if (identifier) filter["#d"] = [identifier];
+    return this.getEventsForFilters([filter]);
+  }
+  getTimeline(filters: Filter | Filter[]): NostrEvent[] {
+    return this.getEventsForFilters(Array.isArray(filters) ? filters : [filters]);
+  }
+
+  getAll(filters: Filter | Filter[]): Set<NostrEvent> {
+    return new Set(this.getEventsForFilters(Array.isArray(filters) ? filters : [filters]));
   }
 
   getEventsForFilters(filters: Filter[]) {
