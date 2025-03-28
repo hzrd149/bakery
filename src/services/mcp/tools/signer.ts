@@ -9,6 +9,20 @@ import { DEFAULT_NOSTR_CONNECT_RELAYS } from "../../../const.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 import bakeryConfig from "../../config.js";
 
+mcpServer.prompt("setup_signer", "Start the setup and connection process for the users nostr signer", async () => {
+  return {
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: "Start the signer setup process and show the full ASCII qr code and nostr connect URI",
+        },
+      },
+    ],
+  };
+});
+
 mcpServer.tool(
   "set_owner_pubkey",
   "Sets the owner's pubkey",
@@ -85,8 +99,9 @@ mcpServer.tool(
 
     return {
       content: [
-        { type: "text", text: qr },
-        { type: "text", text: `Nostr Connect URI: ${uri}` },
+        { type: "text", text: "Started signer setup, scan the QR code or connect manually with the URI" },
+        { type: "text", text: `Scan this QR Code to connect a signer\n${qr}` },
+        { type: "text", text: `or manually connect to: ${uri}` },
       ],
     };
   },
@@ -108,8 +123,8 @@ mcpServer.tool("nostr_signer_status", "Gets the status of the current signer", {
     return {
       content: [
         { type: "text", text: "Signer setup in progress, waiting for the signer to connect" },
-        { type: "text", text: qr },
-        { type: "text", text: `Nostr Connect URI: ${uri}` },
+        { type: "text", text: `Scan this QR Code to connect a signer\n${qr}` },
+        { type: "text", text: `or manually connect to: ${uri}` },
       ],
     };
   }
