@@ -1,7 +1,6 @@
+import bakeryDatabase from "../db/database.js";
 import { SQLiteEventStore } from "../sqlite/event-store.js";
-import database from "./database.js";
 
-const eventCache = new SQLiteEventStore(database.db);
-await eventCache.setup();
+const eventCache = new SQLiteEventStore(bakeryDatabase);
 
 export default eventCache;

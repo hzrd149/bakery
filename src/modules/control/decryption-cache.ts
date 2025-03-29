@@ -23,20 +23,15 @@ export default class DecryptionCacheActions implements ControlMessageHandler {
         this.app.decryptionCache.addEventContent(message[3], message[4]);
         return true;
 
-      case "CLEAR-PUBKEY":
-        this.app.decryptionCache.clearPubkey(message[3]);
-        return true;
-
       case "CLEAR":
         this.app.decryptionCache.clearAll();
         return true;
 
       case "REQUEST":
-        this.app.decryptionCache.getEventsContent(message[3]).then((contents) => {
-          for (const { event, content } of contents)
-            this.send(sock, ["CONTROL", "DECRYPTION-CACHE", "CONTENT", event, content]);
-          this.send(sock, ["CONTROL", "DECRYPTION-CACHE", "END"]);
-        });
+        const contents = this.app.decryptionCache.getEventsContent(message[3]);
+        for (const { event, content } of contents)
+          this.send(sock, ["CONTROL", "DECRYPTION-CACHE", "CONTENT", event, content]);
+        this.send(sock, ["CONTROL", "DECRYPTION-CACHE", "END"]);
         return true;
 
       default:

@@ -1,6 +1,16 @@
 import { from, merge, NEVER } from "rxjs";
-import database from "../../../services/database.js";
 import { Query } from "../types.js";
+import bakeryDatabase, { schema } from "../../../db/index.js";
 
 export const ServicesQuery: Query<string[]> = () =>
-  merge(NEVER, from(database.db.prepare<[], { id: string }>(`SELECT service as id FROM logs GROUP BY service`).all()));
+  merge(
+    NEVER,
+    from(
+      bakeryDatabase
+        .select()
+        .from(schema.logs)
+        .groupBy(schema.logs.service)
+        .all()
+        .map((row) => row.service),
+    ),
+  );

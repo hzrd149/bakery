@@ -9,7 +9,6 @@ import { filter } from "rxjs";
 import cors from "cors";
 
 import { logger } from "../logger.js";
-import Database from "./database.js";
 
 import { NIP_11_SOFTWARE_URL, SENSITIVE_KINDS } from "../const.js";
 import { OWNER_PUBKEY, BAKERY_PORT } from "../env.js";
@@ -18,7 +17,6 @@ import ControlApi from "../modules/control/control-api.js";
 import ConfigActions from "../modules/control/config-actions.js";
 import ReceiverActions from "../modules/control/receiver-actions.js";
 import Receiver from "../modules/receiver/index.js";
-import DatabaseActions from "../modules/control/database-actions.js";
 import DirectMessageManager from "../modules/direct-message-manager.js";
 import DirectMessageActions from "../modules/control/dm-actions.js";
 import AddressBook from "../modules/address-book.js";
@@ -33,18 +31,17 @@ import DecryptionCache from "../modules/decryption-cache/decryption-cache.js";
 import DecryptionCacheActions from "../modules/control/decryption-cache.js";
 import Scrapper from "../modules/scrapper/index.js";
 import LogsActions from "../modules/control/logs-actions.js";
-import ApplicationStateManager from "../modules/state/application-state-manager.js";
+import ApplicationStateManager from "../modules/application-state/manager.js";
 import ScrapperActions from "../modules/control/scrapper-actions.js";
 import InboundNetworkManager from "../modules/network/inbound/index.js";
 import OutboundNetworkManager from "../modules/network/outbound/index.js";
 import SecretsManager from "../modules/secrets-manager.js";
 import Switchboard from "../modules/switchboard/switchboard.js";
 import Gossip from "../modules/gossip.js";
-import database from "../services/database.js";
 import secrets from "../services/secrets.js";
 import bakeryConfig from "../services/config.js";
 import logStore from "../services/log-store.js";
-import stateManager from "../services/state.js";
+import stateManager from "../services/app-state.js";
 import eventCache from "../services/event-cache.js";
 import { inboundNetwork, outboundNetwork } from "../services/network.js";
 import { server } from "../services/server.js";
@@ -54,7 +51,8 @@ import { getDMRecipient } from "../helpers/direct-messages.js";
 import { onConnection, onJSONMessage } from "../helpers/ws.js";
 import QueryManager from "../modules/queries/manager.js";
 import "../modules/queries/queries/index.js";
-import bakerySigner from "../services/bakery.js";
+import bakerySigner from "../services/bakery-signer.js";
+import db from "../db/index.js";
 
 type EventMap = {
   listening: [];
@@ -74,7 +72,7 @@ export default class App extends EventEmitter<EventMap> {
   inboundNetwork: InboundNetworkManager;
   outboundNetwork: OutboundNetworkManager;
 
-  database: Database;
+  database: typeof db;
   eventStore: SQLiteEventStore;
   logStore: LogStore;
   relay: NostrRelay;
@@ -130,7 +128,7 @@ export default class App extends EventEmitter<EventMap> {
     });
 
     // Init sqlite database
-    this.database = database;
+    this.database = db;
 
     // create log managers
     this.logStore = logStore;
@@ -149,8 +147,7 @@ export default class App extends EventEmitter<EventMap> {
     this.eventStore = eventCache;
 
     // setup decryption cache
-    this.decryptionCache = new DecryptionCache(this.database.db);
-    this.decryptionCache.setup();
+    this.decryptionCache = new DecryptionCache(this.database);
 
     // Setup managers user contacts and profiles
     this.addressBook = new AddressBook();
@@ -192,7 +189,6 @@ export default class App extends EventEmitter<EventMap> {
     this.control.registerHandler(new ConfigActions(this));
     this.control.registerHandler(new ReceiverActions(this));
     this.control.registerHandler(new ScrapperActions(this));
-    this.control.registerHandler(new DatabaseActions(this));
     this.control.registerHandler(new DirectMessageActions(this));
     this.control.registerHandler(new NotificationActions(this));
     this.control.registerHandler(new RemoteAuthActions(this));
@@ -395,9 +391,7 @@ export default class App extends EventEmitter<EventMap> {
     this.config.write();
     this.scrapper.stop();
     this.receiver.stop();
-    await this.state.saveAll();
     this.relay.stop();
-    this.database.destroy();
     this.receiver.destroy();
 
     await this.inboundNetwork.stop();

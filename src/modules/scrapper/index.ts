@@ -37,7 +37,7 @@ export default class Scrapper extends EventEmitter<EventMap> {
   }
 
   async setup() {
-    this.state = (await this.app.state.getMutableState<ScrapperState>("scrapper", { pubkeys: [] })).proxy;
+    this.state = this.app.state.getMutableState<ScrapperState>("scrapper", { pubkeys: [] });
   }
 
   async ensureData() {

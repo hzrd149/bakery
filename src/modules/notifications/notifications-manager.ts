@@ -7,7 +7,7 @@ import webPush from "web-push";
 
 import { logger } from "../../logger.js";
 import App from "../../app/index.js";
-import stateManager from "../../services/state.js";
+import stateManager from "../../services/app-state.js";
 import bakeryConfig from "../../services/config.js";
 import { getDMRecipient, getDMSender } from "../../helpers/direct-messages.js";
 
@@ -40,9 +40,9 @@ export default class NotificationsManager extends EventEmitter<EventMap> {
   }
 
   async setup() {
-    this.state = (
-      await stateManager.getMutableState<NotificationsManagerState>("notification-manager", { channels: [] })
-    ).proxy;
+    this.state = stateManager.getMutableState<NotificationsManagerState>("notification-manager", {
+      channels: [],
+    });
   }
 
   addOrUpdateChannel(channel: NotificationChannel) {

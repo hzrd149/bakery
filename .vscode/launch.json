@@ -19,6 +19,7 @@
       "args": ["--loader", "@swc-node/register/esm", "src/index.ts"],
       "outFiles": ["${workspaceFolder}/**/*.js"],
       "env": {
+        "DATA_PATH": "./data",
         "NODE_ENV": "development",
         "DEBUG": "bakery,bakery:*,applesauce,applesauce:*",
         "DEBUG_HIDE_DATE": "true",

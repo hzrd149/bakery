@@ -14,7 +14,9 @@ import App from "./app/index.js";
 import { PUBLIC_ADDRESS, IS_MCP } from "./env.js";
 import { addListener, logger } from "./logger.js";
 import { pathExists } from "./helpers/fs.js";
-import "./services/owner.js";
+import stateManager from "./services/app-state.js";
+import bakeryDatabase from "./db/database.js";
+import logStore from "./services/log-store.js";
 
 // add durations plugin
 dayjs.extend(duration);
@@ -81,9 +83,19 @@ if (IS_MCP) {
 
 // shutdown process
 async function shutdown() {
-  logger("shutting down");
+  logger("Shutting down...");
 
+  // Stop the app
   await app.stop();
+
+  // Save the application state
+  stateManager.saveAll();
+
+  // Stop writing the logs to the database
+  logStore.close();
+
+  // Close the database last
+  bakeryDatabase.$client.close();
   process.exit(0);
 }
 process.on("SIGINT", shutdown);

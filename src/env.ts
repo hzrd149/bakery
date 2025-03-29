@@ -13,6 +13,8 @@ export const PUBLIC_ADDRESS = process.env.PUBLIC_ADDRESS;
 export const DATA_PATH = process.env.DATA_PATH || join(homedir(), ".bakery");
 await mkdirp(DATA_PATH);
 
+export const DATABASE = join(DATA_PATH, "bakery.db");
+
 export const BAKERY_PORT = parseInt(args.values.port ?? process.env.BAKERY_PORT ?? "") || DEFAULT_PORT;
 
 // I2P config

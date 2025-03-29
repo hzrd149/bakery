@@ -56,7 +56,7 @@ export default class PubkeyScrapper extends EventEmitter<EventMap> {
             `${this.pubkey}|${relay.url}`,
             {},
           );
-          if (state) scrapper.state = state.proxy;
+          if (state) scrapper.state = state;
 
           this.relayScrappers.set(url, scrapper);
         }

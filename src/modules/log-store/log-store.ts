@@ -1,59 +1,32 @@
-import { type Database as SQLDatabase } from "better-sqlite3";
-import EventEmitter from "events";
+import { bufferTime, filter, firstValueFrom, Subject, Subscription } from "rxjs";
+import { gte, lte, like, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { Debugger } from "debug";
 
-import { logger } from "../../logger.js";
-import { MigrationSet } from "../../sqlite/migrations.js";
+import { BakeryDatabase } from "../../db/database.js";
+import { schema } from "../../db/index.js";
 
-type EventMap = {
-  log: [LogEntry];
-  clear: [string | undefined];
+export type LogFilter = {
+  service?: string;
+  since?: number;
+  until?: number;
 };
 
-export type LogEntry = {
-  id: string;
-  service: string;
-  timestamp: number;
-  message: string;
-};
-export type DatabaseLogEntry = LogEntry & {
-  id: number | bigint;
-};
+export default class LogStore {
+  public insert$ = new Subject<typeof schema.logs.$inferInsert>();
+  protected write$ = new Subject<typeof schema.logs.$inferInsert>();
 
-const migrations = new MigrationSet("log-store");
+  protected writeQueue: Subscription;
 
-// version 1
-migrations.addScript(1, async (db, log) => {
-  db.prepare(
-    `
-		CREATE TABLE IF NOT EXISTS "logs" (
-			"id" TEXT NOT NULL UNIQUE,
-			"timestamp"	INTEGER NOT NULL,
-			"service"	TEXT NOT NULL,
-			"message"	TEXT NOT NULL,
-			PRIMARY KEY("id")
-		);
-	`,
-  ).run();
-  log("Created logs table");
-
-  db.prepare("CREATE INDEX IF NOT EXISTS logs_service ON logs(service)");
-  log("Created logs service index");
-});
-
-export default class LogStore extends EventEmitter<EventMap> {
-  database: SQLDatabase;
-  debug: Debugger;
-
-  constructor(database: SQLDatabase) {
-    super();
-    this.database = database;
-    this.debug = logger;
-  }
-
-  async setup() {
-    return await migrations.run(this.database);
+  constructor(public database: BakeryDatabase) {
+    // Buffer writes to the database
+    this.writeQueue = this.write$
+      .pipe(
+        bufferTime(1000, null, 5000),
+        filter((entries) => entries.length > 0),
+      )
+      .subscribe((entries) => {
+        this.database.insert(schema.logs).values(entries).run();
+      });
   }
 
   addEntry(service: string, timestamp: Date | number, message: string) {
@@ -65,99 +38,37 @@ export default class LogStore extends EventEmitter<EventMap> {
       message,
     };
 
-    this.queue.push(entry);
-    this.emit("log", entry);
-
-    if (!this.running) this.write();
+    this.write$.next(entry);
+    this.insert$.next(entry);
   }
 
-  running = false;
-  queue: LogEntry[] = [];
-  private write() {
-    if (this.running) return;
-    this.running = true;
-
-    const BATCH_SIZE = 5000;
-
-    const inserted: (number | bigint)[] = [];
-    const failed: LogEntry[] = [];
-
-    this.database.transaction(() => {
-      let i = 0;
-      while (this.queue.length) {
-        const entry = this.queue.shift()!;
-        try {
-          const { lastInsertRowid } = this.database
-            .prepare<
-              [string, string, number, string]
-            >(`INSERT INTO "logs" (id, service, timestamp, message) VALUES (?, ?, ?, ?)`)
-            .run(entry.id, entry.service, entry.timestamp, entry.message);
-
-          inserted.push(lastInsertRowid);
-        } catch (error) {
-          failed.push(entry);
-        }
-
-        if (++i >= BATCH_SIZE) break;
-      }
-    })();
-
-    for (const entry of failed) {
-      // Don't know what to do here...
-    }
-
-    if (this.queue.length > 0) setTimeout(this.write.bind(this), 1000);
-    else this.running = false;
+  getLogs(filter?: LogFilter & { limit?: number }) {
+    return this.database
+      .select()
+      .from(schema.logs)
+      .where(({ service, timestamp }) => {
+        const conditions = [];
+        if (filter?.service) conditions.push(like(service, `${filter.service}%`));
+        if (filter?.since) conditions.push(gte(timestamp, filter.since));
+        if (filter?.until) conditions.push(lte(timestamp, filter.until));
+        return and(...conditions);
+      })
+      .limit(filter?.limit ?? -1)
+      .all();
   }
 
-  getLogs(filter?: { service?: string; since?: number; until?: number; limit?: number }) {
-    const conditions: string[] = [];
-    const parameters: (string | number)[] = [];
+  clearLogs(filter?: LogFilter) {
+    const conditions = [];
+    if (filter?.service) conditions.push(like(schema.logs.service, `${filter.service}%`));
+    if (filter?.since) conditions.push(gte(schema.logs.timestamp, filter.since));
+    if (filter?.until) conditions.push(lte(schema.logs.timestamp, filter.until));
+    const where = and(...conditions);
 
-    let sql = `SELECT * FROM logs`;
-
-    if (filter?.service) {
-      conditions.push(`service LIKE CONCAT(?,'%')`);
-      parameters.push(filter?.service);
-    }
-    if (filter?.since) {
-      conditions.push("timestamp>=?");
-      parameters.push(filter?.since);
-    }
-    if (filter?.until) {
-      conditions.push("timestamp<=?");
-      parameters.push(filter?.until);
-    }
-    if (conditions.length > 0) sql += ` WHERE ${conditions.join(" AND ")}`;
-
-    if (filter?.limit) {
-      sql += " LIMIT ?";
-      parameters.push(filter.limit);
-    }
-    return this.database.prepare<any[], DatabaseLogEntry>(sql).all(...parameters);
+    this.database.delete(schema.logs).where(where).run();
   }
 
-  clearLogs(filter?: { service?: string; since?: number; until?: number }) {
-    const conditions: string[] = [];
-    const parameters: (string | number)[] = [];
-
-    let sql = `DELETE FROM logs`;
-
-    if (filter?.service) {
-      conditions.push("service=?");
-      parameters.push(filter?.service);
-    }
-    if (filter?.since) {
-      conditions.push("timestamp>=?");
-      parameters.push(filter?.since);
-    }
-    if (filter?.until) {
-      conditions.push("timestamp<=?");
-      parameters.push(filter?.until);
-    }
-    if (conditions.length > 0) sql += ` WHERE ${conditions.join(" AND ")}`;
-
-    this.database.prepare<any[]>(sql).run(parameters);
-    this.emit("clear", filter?.service);
+  close() {
+    // stop writing to the database
+    this.writeQueue.unsubscribe();
   }
 }

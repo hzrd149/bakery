@@ -1,3 +1,4 @@
+import { BehaviorSubject } from "rxjs";
 import { EventEmitter } from "events";
 import { LowSync, SyncAdapter } from "lowdb";
 import { JSONFileSync } from "lowdb/node";
@@ -17,6 +18,7 @@ export class ReactiveJsonFile<T extends object> extends EventEmitter<EventMap<T>
   adapter: SyncAdapter<T>;
 
   data: T;
+  data$: BehaviorSubject<T>;
 
   constructor(path: string, defaultData: T) {
     super();
@@ -25,6 +27,7 @@ export class ReactiveJsonFile<T extends object> extends EventEmitter<EventMap<T>
     this.db = new LowSync<T>(this.adapter, defaultData);
 
     this.data = this.createProxy();
+    this.data$ = new BehaviorSubject(this.db.data);
   }
 
   private createProxy() {
@@ -34,6 +37,7 @@ export class ReactiveJsonFile<T extends object> extends EventEmitter<EventMap<T>
       },
       set: (target, p, newValue, receiver) => {
         Reflect.set(target, p, newValue, receiver);
+        this.data$.next(target as T);
         this.emit("changed", target as T, String(p), newValue);
         this.emit("updated", target as T);
         return true;
@@ -43,12 +47,14 @@ export class ReactiveJsonFile<T extends object> extends EventEmitter<EventMap<T>
 
   read() {
     this.db.read();
+    this.data$.next(this.db.data);
     this.emit("loaded", this.db.data);
     this.emit("updated", this.db.data);
     this.createProxy();
   }
   write() {
     this.db.write();
+    this.data$.next(this.db.data);
     this.emit("saved", this.db.data);
   }
   update(fn: (data: T) => unknown) {

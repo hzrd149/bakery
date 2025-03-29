@@ -1,7 +1,6 @@
 import LogStore from "../modules/log-store/log-store.js";
-import database from "./database.js";
+import bakeryDatabase from "../db/index.js";
 
-const logStore = new LogStore(database.db);
-await logStore.setup();
+const logStore = new LogStore(bakeryDatabase);
 
 export default logStore;
