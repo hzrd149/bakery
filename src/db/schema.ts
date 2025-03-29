@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { int, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
 
 // Event store tables
@@ -55,4 +56,12 @@ export const logs = sqliteTable("logs", {
 export const applicationState = sqliteTable("application_state", {
   id: text("id").primaryKey().notNull(),
   state: text("state"),
+});
+
+export const relayInfo = sqliteTable("relay_info", {
+  url: text("url").primaryKey(),
+  info: text("info").notNull(),
+  updated_at: int("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
 });

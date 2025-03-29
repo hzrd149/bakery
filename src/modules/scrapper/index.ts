@@ -5,8 +5,8 @@ import { Deferred, createDefer } from "applesauce-core/promise";
 import App from "../../app/index.js";
 import { logger } from "../../logger.js";
 import PubkeyScrapper from "./pubkey-scrapper.js";
-import { requestLoader } from "../../services/loaders.js";
 import SuperMap from "../../helpers/super-map.js";
+import { asyncLoader } from "../../services/loaders.js";
 
 const MAX_TASKS = 10;
 
@@ -44,8 +44,8 @@ export default class Scrapper extends EventEmitter<EventMap> {
     if (!this.app.config.data.owner) throw new Error("Owner not setup yet");
 
     // get mailboxes and contacts
-    const mailboxes = await requestLoader.mailboxes({ pubkey: this.app.config.data.owner });
-    const contacts = await requestLoader.contacts({ pubkey: this.app.config.data.owner });
+    const mailboxes = await asyncLoader.outboxes(this.app.config.data.owner);
+    const contacts = await asyncLoader.contacts(this.app.config.data.owner);
 
     if (!contacts) throw new Error("Missing contact list");
 

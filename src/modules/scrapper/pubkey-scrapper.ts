@@ -5,7 +5,7 @@ import { Debugger } from "debug";
 
 import PubkeyRelayScrapper, { PubkeyRelayScrapperState } from "./pubkey-relay-scrapper.js";
 import { logger } from "../../logger.js";
-import { requestLoader } from "../../services/loaders.js";
+import { asyncLoader } from "../../services/loaders.js";
 
 type EventMap = {
   event: [NostrEvent];
@@ -31,15 +31,15 @@ export default class PubkeyScrapper extends EventEmitter<EventMap> {
   async ensureData() {
     // get mailboxes
     this.app.profileBook.loadProfile(this.pubkey);
-    const mailboxes = await requestLoader.mailboxes({ pubkey: this.pubkey });
+    const outboxes = await asyncLoader.outboxes(this.pubkey);
 
-    return { mailboxes };
+    return { outboxes };
   }
 
   async loadNext() {
-    const { mailboxes } = await this.ensureData();
+    const { outboxes } = await this.ensureData();
 
-    const relays = [...(mailboxes?.outboxes ?? []), ...this.additionalRelays];
+    const relays = [...outboxes, ...this.additionalRelays];
     const scrappers: PubkeyRelayScrapper[] = [];
     for (const url of relays) {
       if (this.failed.has(url)) continue;

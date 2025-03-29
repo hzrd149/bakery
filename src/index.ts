@@ -18,6 +18,8 @@ import stateManager from "./services/app-state.js";
 import bakeryDatabase from "./db/database.js";
 import logStore from "./services/log-store.js";
 
+import "./lifecycle.js";
+
 // add durations plugin
 dayjs.extend(duration);
 dayjs.extend(localizedFormat);

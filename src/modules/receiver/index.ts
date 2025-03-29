@@ -1,248 +1,193 @@
-import EventEmitter from "events";
-import { NostrEvent, SimplePool } from "nostr-tools";
-import { Subscription } from "nostr-tools/abstract-relay";
-import { getRelaysFromContactsEvent } from "applesauce-core/helpers";
+import {
+  bufferTime,
+  catchError,
+  combineLatest,
+  distinct,
+  distinctUntilChanged,
+  from,
+  map,
+  merge,
+  Observable,
+  ObservableInput,
+  of,
+  scan,
+  share,
+  shareReplay,
+  Subject,
+  switchMap,
+  tap,
+  throttleTime,
+} from "rxjs";
+import { createRxForwardReq, EventPacket, RxNostr, RxReq } from "rx-nostr";
+import { ProfilePointer } from "nostr-tools/nip19";
+import { Filter, kinds } from "nostr-tools";
+import { getRelaysFromContactsEvent, isFilterEqual } from "applesauce-core/helpers";
 
-import { BOOTSTRAP_RELAYS, LOOKUP_RELAYS } from "../../env.js";
+import { FALLBACK_RELAYS, LOOKUP_RELAYS } from "../../env.js";
 import { logger } from "../../logger.js";
-import App from "../../app/index.js";
-import { arrayFallback } from "../../helpers/array.js";
-import { requestLoader } from "../../services/loaders.js";
-import SuperMap from "../../helpers/super-map.js";
+import AsyncLoader from "../async-loader.js";
+import { groupPubkeysByRelay } from "./relay-mapping.js";
+import { lastN } from "../../helpers/rxjs.js";
 
-type EventMap = {
-  started: [Receiver];
-  stopped: [Receiver];
-  status: [string];
-  rebuild: [];
-  subscribed: [string, string[]];
-  closed: [string, string[]];
-  error: [Error];
-  event: [NostrEvent];
+export type ReceiverConfig = {
+  refreshInterval?: number;
+  minRelaysPerPubkey?: number;
+  maxRelaysPerPubkey?: number;
 };
 
-type ReceiverStatus = "running" | "starting" | "errored" | "stopped";
+type OngoingRequest = {
+  req: ReturnType<typeof createRxForwardReq>;
+  filter: Filter;
+  observable: Observable<EventPacket>;
+};
 
-export default class Receiver extends EventEmitter<EventMap> {
+export default class Receiver {
   log = logger.extend("Receiver");
 
-  _status: ReceiverStatus = "stopped";
-  get status() {
-    return this._status;
-  }
-  set status(v: ReceiverStatus) {
-    this._status = v;
-    this.emit("status", v);
-  }
+  /** The outboxes for the root pubkey */
+  outboxes$: Observable<string[]>;
 
-  starting = true;
-  startupError?: Error;
+  /** The contacts for the root pubkey */
+  contacts$: Observable<ProfilePointer[]>;
 
-  app: App;
-  pool: SimplePool;
+  /** A map of the outbox relays for all the people in the contacts list */
+  contactOutboxes$: Observable<Record<string, string[]>>;
 
-  subscriptions = new Map<string, Subscription>();
+  /** A map of the pubkeys for each relay */
+  relayPubkeys$: Observable<Map<string, Set<string>>>;
 
-  constructor(app: App, pool?: SimplePool) {
-    super();
-    this.app = app;
-    this.pool = pool || app.pool;
-  }
+  /** A map of the requests for each relay */
+  requests$: Observable<Record<string, OngoingRequest>>;
 
-  // pubkey -> relays
-  private pubkeyRelays = new Map<string, Set<string>>();
-  // relay url -> pubkeys
-  private relayPubkeys = new SuperMap<string, Set<string>>(() => new Set());
+  /** All the events fetched for the relays */
+  events$: Observable<EventPacket>;
 
-  // the current request map in the format of relay -> pubkeys
-  map = new SuperMap<string, Set<string>>(() => new Set());
+  constructor(
+    protected root$: Observable<string>,
+    protected asyncLoader: AsyncLoader,
+    protected rxNostr: RxNostr,
+    protected config: ReceiverConfig,
+  ) {
+    const root = this.root$.pipe(distinctUntilChanged());
 
-  async fetchData() {
-    const owner = this.app.config.data.owner;
-    if (!owner) throw new Error("Missing owner");
-
-    const commonMailboxesRelays = [...BOOTSTRAP_RELAYS, ...LOOKUP_RELAYS];
-
-    const ownerMailboxes = await requestLoader.mailboxes({ pubkey: owner, relays: commonMailboxesRelays }, true);
-
-    this.log("Searching for owner kind:3 contacts");
-    const contacts = await requestLoader.contacts(
-      {
-        pubkey: owner,
-        relays: arrayFallback(ownerMailboxes?.outboxes, BOOTSTRAP_RELAYS),
-      },
-      true,
+    this.outboxes$ = root.pipe(
+      switchMap((pubkey) =>
+        from(this.asyncLoader.outboxes(pubkey, LOOKUP_RELAYS)).pipe(
+          // Log when outboxes are loaded
+          tap((outboxes) => this.log(`Found ${outboxes.length} outboxes for ${pubkey}`)),
+        ),
+      ),
+      catchError(() => of(FALLBACK_RELAYS)),
     );
-    if (!contacts) throw new Error("Cant find contacts");
 
-    this.pubkeyRelays.clear();
-    this.relayPubkeys.clear();
+    this.contacts$ = combineLatest([root, this.outboxes$]).pipe(
+      switchMap(([pubkey, outboxes]) =>
+        from(this.asyncLoader.contacts(pubkey, outboxes)).pipe(
+          // Log when contacts are loaded
+          tap((contacts) => this.log(`Found ${contacts.length} contacts for ${pubkey}`)),
+        ),
+      ),
+    );
 
-    // add the owners details
-    this.pubkeyRelays.set(owner, new Set(ownerMailboxes?.outboxes));
-    if (ownerMailboxes?.outboxes) for (const url of ownerMailboxes?.outboxes) this.relayPubkeys.get(url).add(owner);
+    this.contactOutboxes$ = this.contacts$.pipe(
+      switchMap((contacts) => {
+        const directory: Record<string, ObservableInput<string[]>> = {};
 
-    this.log(`Found ${contacts.length} contacts`);
-
-    let usersWithMailboxes = 0;
-    let usersWithContactRelays = 0;
-    let usersWithFallbackRelays = 0;
-
-    // fetch all addresses in parallel
-    await Promise.all(
-      contacts.map(async (person) => {
-        const mailboxes = await this.app.addressBook.loadMailboxes(
-          person.pubkey,
-          arrayFallback(ownerMailboxes?.inboxes, commonMailboxesRelays),
-        );
-
-        let relays = mailboxes?.outboxes ?? [];
-
-        // if the user does not have any mailboxes try to get the relays stored in the contact list
-        if (relays.length === 0) {
-          const contacts = await this.app.contactBook.loadContactsEvent(
-            person.pubkey,
-            arrayFallback(ownerMailboxes?.inboxes, BOOTSTRAP_RELAYS),
+        // Create an observable for each contact to load the outbox relays
+        for (const contact of contacts) {
+          directory[contact.pubkey] = from(this.asyncLoader.outboxes(contact.pubkey, LOOKUP_RELAYS)).pipe(
+            catchError(() =>
+              // If the outboxes fail, try to load the contacts event and parse the relays from it
+              from(this.asyncLoader.replaceable(kinds.Contacts, contact.pubkey)).pipe(
+                map((event) => {
+                  const parsed = getRelaysFromContactsEvent(event);
+                  if (!parsed) throw new Error("No relays in contacts");
+                  return Array.from(parsed.entries()).map(([r]) => r);
+                }),
+                // If that fails, use the fallback relays
+                catchError(() => of(FALLBACK_RELAYS)),
+              ),
+            ),
           );
+        }
 
-          if (contacts && contacts.content.startsWith("{")) {
-            const parsed = getRelaysFromContactsEvent(contacts);
-            if (parsed) {
-              relays = Array.from(parsed.entries())
-                .filter(([r, mode]) => mode === "all" || mode === "outbox")
-                .map(([r]) => r);
-              usersWithContactRelays++;
-            } else {
-              relays = BOOTSTRAP_RELAYS;
-              usersWithFallbackRelays++;
-            }
-          } else {
-            relays = BOOTSTRAP_RELAYS;
-            usersWithFallbackRelays++;
-          }
-        } else usersWithMailboxes++;
-
-        // add pubkey details
-        this.pubkeyRelays.set(person.pubkey, new Set(relays));
-        for (const url of relays) this.relayPubkeys.get(url).add(person.pubkey);
+        return combineLatest(directory);
       }),
     );
 
-    this.log(
-      `Found ${usersWithMailboxes} users with mailboxes, ${usersWithContactRelays} user with relays in contact list, and ${usersWithFallbackRelays} using fallback relays`,
+    this.relayPubkeys$ = this.contactOutboxes$.pipe(
+      // only update the relay pubkeys every interval
+      throttleTime(this.config.refreshInterval ?? 1000),
+      map((directory) =>
+        groupPubkeysByRelay(directory, this.config.minRelaysPerPubkey ?? 3, this.config.maxRelaysPerPubkey ?? 5),
+      ),
     );
-  }
 
-  buildMap() {
-    this.map.clear();
+    this.requests$ = this.relayPubkeys$.pipe(
+      scan(
+        (acc, updated) => {
+          for (const [relay, pubkeys] of updated.entries()) {
+            const filter: Filter = { authors: Array.from(pubkeys) };
 
-    // sort pubkey relays by popularity
-    for (const [pubkey, relays] of this.pubkeyRelays) {
-      const sorted = Array.from(relays).sort((a, b) => this.relayPubkeys.get(b).size - this.relayPubkeys.get(a).size);
+            // only re-create the request if the filter has changed
+            if (acc[relay] && isFilterEqual(acc[relay].filter, filter)) continue;
 
-      // add the pubkey to their top two relays
-      for (const url of sorted.slice(0, 2)) this.map.get(url).add(pubkey);
-    }
+            this.log(`Subscribing to ${relay} with ${pubkeys.size} pubkeys`);
 
-    this.emit("rebuild");
+            const req = createRxForwardReq();
+            const observable = this.rxNostr.use(req, { on: { relays: [relay] } });
 
-    return this.map;
-  }
-
-  private handleEvent(event: NostrEvent) {
-    this.emit("event", event);
-  }
-
-  async updateRelaySubscription(url: string) {
-    const pubkeys = this.map.get(url);
-    if (pubkeys.size === 0) return;
-
-    const subscription = this.subscriptions.get(url);
-    if (!subscription || subscription.closed) {
-      const relay = await this.app.pool.ensureRelay(url);
-
-      const sub = relay.subscribe([{ authors: Array.from(pubkeys) }], {
-        onevent: this.handleEvent.bind(this),
-        onclose: () => {
-          this.emit("closed", url, Array.from(pubkeys));
-          // wait 30 seconds then try to reconnect
-          setTimeout(() => {
-            this.updateRelaySubscription(url);
-          }, 30_000);
+            acc[relay] = { req, filter, observable };
+          }
+          return acc;
         },
+        {} as Record<string, OngoingRequest>,
+      ),
+    );
+
+    let emitted = new WeakSet<RxReq<"forward">>();
+
+    this.events$ = this.requests$.pipe(
+      // Subscribe to all requests
+      switchMap(
+        (requests) =>
+          // A hack to ensure that the filters are emitted after the observable is subscribed to
+          new Observable<EventPacket>((observer) => {
+            // Merge all the observables into one
+            const sub = merge(...Object.values(requests).map((r) => r.observable)).subscribe(observer);
+
+            // Emit filters
+            let count = 0;
+            for (const request of Object.values(requests)) {
+              if (emitted.has(request.req)) continue;
+
+              count++;
+              request.req.emit(request.filter);
+              emitted.add(request.req);
+            }
+
+            if (count > 0) this.log(`Updated ${count} of ${Object.keys(requests).length} relay subscriptions`);
+
+            return sub;
+          }),
+      ),
+      // Log when the receiver stops or has errors
+      tap({ complete: () => this.log("Receiver stopped"), error: (e) => this.log("Receiver error", e.message) }),
+      // Share so the pipeline its not recreated for each subscription
+      share(),
+    );
+
+    // Log the average number of events received per minute over the last 5 minutes
+    this.events$
+      .pipe(
+        distinct((e) => e.event.id),
+        bufferTime(60_000), // Buffer events for 1 minute
+        map((events) => events.length), // Count events in buffer
+        lastN(5),
+      )
+      .subscribe((audits) => {
+        const avg = audits.reduce((sum, val) => sum + val, 0) / audits.length;
+        this.log(`Average ${avg.toFixed(2)} events/minute over the last ${audits.length} minutes`);
       });
-
-      this.emit("subscribed", url, Array.from(pubkeys));
-      this.subscriptions.set(url, sub);
-      this.log(`Subscribed to ${url} for ${pubkeys.size} pubkeys`);
-    } else {
-      const hasOld = subscription.filters[0].authors?.some((p) => !pubkeys.has(p));
-      const hasNew = Array.from(pubkeys).some((p) => !subscription.filters[0].authors?.includes(p));
-
-      if (hasNew || hasOld) {
-        // reset the subscription
-        subscription.eosed = false;
-        subscription.filters = [{ authors: Array.from(pubkeys) }];
-        subscription.fire();
-        this.log(`Subscribed to ${url} with ${pubkeys.size} pubkeys`);
-      }
-    }
-  }
-
-  ensureSubscriptions() {
-    const promises: Promise<void>[] = [];
-
-    for (const [url, pubkeys] of this.map) {
-      const p = this.updateRelaySubscription(url).catch((error) => {
-        // failed to connect to relay
-        // this needs to be remembered and the subscription map should be rebuilt accordingly
-      });
-
-      promises.push(p);
-    }
-
-    return Promise.all(promises);
-  }
-
-  async start() {
-    if (this.status === "running" || this.status === "starting") return;
-
-    try {
-      this.log("Starting");
-      this.startupError = undefined;
-      this.status = "starting";
-
-      await this.fetchData();
-      this.buildMap();
-      await this.ensureSubscriptions();
-
-      this.status = "running";
-      this.emit("started", this);
-    } catch (error) {
-      this.status = "errored";
-      if (error instanceof Error) {
-        this.startupError = error;
-        this.log(`Failed to start receiver`, error.message);
-        this.emit("error", error);
-      }
-    }
-  }
-
-  /** stop receiving events and disconnect from all relays */
-  stop() {
-    if (this.status === "stopped") return;
-
-    this.status = "stopped";
-
-    for (const [relay, sub] of this.subscriptions) sub.close();
-    this.subscriptions.clear();
-
-    this.log("Stopped");
-    this.emit("stopped", this);
-  }
-
-  destroy() {
-    this.stop();
-    this.removeAllListeners();
   }
 }

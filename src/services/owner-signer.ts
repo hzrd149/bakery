@@ -9,12 +9,12 @@ import { eventStore } from "./stores.js";
 import { nostrConnectPublish, nostrConnectSubscription } from "../helpers/applesauce.js";
 import { NostrEvent } from "nostr-tools";
 import eventCache from "./event-cache.js";
-import { requestLoader } from "./loaders.js";
 import bakeryConfig from "./config.js";
 import { rxNostr } from "./rx-nostr.js";
 import { logger } from "../logger.js";
 import { NostrConnectAccount } from "applesauce-accounts/accounts";
 import { DEFAULT_NOSTR_CONNECT_RELAYS } from "../const.js";
+import { asyncLoader } from "./loaders.js";
 
 NostrConnectSigner.subscriptionMethod = nostrConnectSubscription;
 NostrConnectSigner.publishMethod = nostrConnectPublish;
@@ -101,8 +101,7 @@ export async function ownerPublish(event: NostrEvent, relays?: string[]) {
   eventCache.addEvent(event);
 
   // publish event to owners outboxes
-  if (!relays && bakeryConfig.data.owner)
-    relays = (await requestLoader.mailboxes({ pubkey: bakeryConfig.data.owner })).outboxes;
+  if (!relays && bakeryConfig.data.owner) relays = await asyncLoader.outboxes(bakeryConfig.data.owner);
 
   return await lastValueFrom(rxNostr.send(event, { on: { relays } }).pipe(toArray()));
 }

@@ -97,7 +97,7 @@ export class SQLiteEventStore extends EventEmitter<EventMap> implements ISyncEve
 
     if (inserted) {
       // Remove older replaceable events if we're not keeping history
-      if (this.keepHistory === false) {
+      if (this.keepHistory === false && (kinds.isReplaceableKind(event.kind) || kinds.isAddressableKind(event.kind))) {
         this.removeReplaceableHistory(event.kind, event.pubkey, identifier);
       }
 

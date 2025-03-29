@@ -1,4 +1,5 @@
 import { type Database } from "better-sqlite3";
+import { markFromCache } from "applesauce-core/helpers";
 import { NostrEvent } from "nostr-tools";
 
 import * as schema from "./schema.js";
@@ -8,7 +9,7 @@ export function hasTable(db: Database, table: string) {
 }
 
 export function parseEventRow(row: typeof schema.events.$inferSelect): NostrEvent {
-  return {
+  const event: NostrEvent = {
     kind: row.kind,
     id: row.id,
     pubkey: row.pubkey,
@@ -17,4 +18,8 @@ export function parseEventRow(row: typeof schema.events.$inferSelect): NostrEven
     sig: row.sig,
     tags: JSON.parse(row.tags),
   };
+
+  markFromCache(event);
+
+  return event;
 }

@@ -9,7 +9,7 @@ import { z } from "zod";
 import mcpServer from "../server.js";
 import { ownerFactory, ownerPublish } from "../../owner-signer.js";
 import eventCache from "../../event-cache.js";
-import { requestLoader, singleEventLoader } from "../../loaders.js";
+import { asyncLoader, singleEventLoader } from "../../loaders.js";
 import { eventStore } from "../../stores.js";
 
 function publishFeedback(results: OkPacketAgainstEvent[]) {
@@ -47,7 +47,7 @@ async function resolveEventInput(input: string | { id: string }): Promise<NostrE
       if (event) return event;
 
       // try to load the event from the replaceable loader
-      return await requestLoader.replaceable(decode.data);
+      return await asyncLoader.replaceable(decode.data.kind, decode.data.pubkey, decode.data.identifier);
     }
   } else {
     // get the event based on the id in the object

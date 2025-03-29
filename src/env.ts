@@ -4,7 +4,7 @@ import { normalizeURL } from "applesauce-core/helpers";
 import { homedir } from "os";
 import { join } from "path";
 
-import { DEFAULT_BOOTSTRAP_RELAYS, DEFAULT_LOOKUP_RELAYS, DEFAULT_PORT, OUTBOUND_PROXY_TYPES } from "./const.js";
+import { DEFAULT_FALLBACK_RELAYS, DEFAULT_LOOKUP_RELAYS, DEFAULT_PORT, OUTBOUND_PROXY_TYPES } from "./const.js";
 import { normalizeToHexPubkey } from "./helpers/nip19.js";
 import args from "./args.js";
 
@@ -32,9 +32,9 @@ export const TOR_ADDRESS = process.env.TOR_ADDRESS;
 if (!OUTBOUND_PROXY_TYPES.includes(TOR_PROXY_TYPE)) throw new Error("Invalid TOR_PROXY_TYPE, must be SOCKS5 or HTTP");
 
 // nostr network config
-export const BOOTSTRAP_RELAYS = process.env.BOOTSTRAP_RELAYS
-  ? process.env.BOOTSTRAP_RELAYS.split(",").map(normalizeURL)
-  : DEFAULT_BOOTSTRAP_RELAYS;
+export const FALLBACK_RELAYS = process.env.FALLBACK_RELAYS
+  ? process.env.FALLBACK_RELAYS.split(",").map(normalizeURL)
+  : DEFAULT_FALLBACK_RELAYS;
 
 export const LOOKUP_RELAYS = process.env.LOOKUP_RELAYS
   ? process.env.LOOKUP_RELAYS.split(",").map(normalizeURL)

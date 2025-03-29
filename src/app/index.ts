@@ -15,8 +15,6 @@ import { OWNER_PUBKEY, BAKERY_PORT } from "../env.js";
 
 import ControlApi from "../modules/control/control-api.js";
 import ConfigActions from "../modules/control/config-actions.js";
-import ReceiverActions from "../modules/control/receiver-actions.js";
-import Receiver from "../modules/receiver/index.js";
 import DirectMessageManager from "../modules/direct-message-manager.js";
 import DirectMessageActions from "../modules/control/dm-actions.js";
 import AddressBook from "../modules/address-book.js";
@@ -76,7 +74,6 @@ export default class App extends EventEmitter<EventMap> {
   eventStore: SQLiteEventStore;
   logStore: LogStore;
   relay: NostrRelay;
-  receiver: Receiver;
   scrapper: Scrapper;
   control: ControlApi;
   pool: CautiousPool;
@@ -166,10 +163,6 @@ export default class App extends EventEmitter<EventMap> {
       if (this.notifications.shouldNotify(event)) this.notifications.notify(event);
     });
 
-    // Initializes receiver and scrapper for pulling data from remote relays
-    this.receiver = new Receiver(this);
-    this.receiver.on("event", (event) => this.eventStore.addEvent(event));
-
     this.scrapper = new Scrapper(this);
     this.scrapper.setup();
 
@@ -187,7 +180,6 @@ export default class App extends EventEmitter<EventMap> {
     // API for controlling the node
     this.control = new ControlApi(this);
     this.control.registerHandler(new ConfigActions(this));
-    this.control.registerHandler(new ReceiverActions(this));
     this.control.registerHandler(new ScrapperActions(this));
     this.control.registerHandler(new DirectMessageActions(this));
     this.control.registerHandler(new NotificationActions(this));
@@ -363,7 +355,6 @@ export default class App extends EventEmitter<EventMap> {
     this.running = true;
     await this.config.read();
 
-    if (this.config.data.runReceiverOnBoot) this.receiver.start();
     if (this.config.data.runScrapperOnBoot) this.scrapper.start();
 
     this.tick();
@@ -390,9 +381,7 @@ export default class App extends EventEmitter<EventMap> {
     this.running = false;
     this.config.write();
     this.scrapper.stop();
-    this.receiver.stop();
     this.relay.stop();
-    this.receiver.destroy();
 
     await this.inboundNetwork.stop();
     await this.outboundNetwork.stop();

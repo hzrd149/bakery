@@ -5,10 +5,10 @@ import z from "zod";
 
 import mcpServer from "../server.js";
 import { ownerFactory, ownerPublish } from "../../owner-signer.js";
-import { requestLoader } from "../../loaders.js";
 import bakeryConfig from "../../config.js";
 import eventCache from "../../event-cache.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
+import { asyncLoader } from "../../loaders.js";
 
 mcpServer.tool(
   "sign_draft_event",
@@ -54,7 +54,7 @@ mcpServer.tool(
   async ({ event, relays }) => {
     if (!bakeryConfig.data.owner) throw new Error("Owner not set");
 
-    relays = relays || (await requestLoader.mailboxes({ pubkey: bakeryConfig.data.owner })).outboxes;
+    relays = relays || (await asyncLoader.outboxes(bakeryConfig.data.owner));
     const results = await ownerPublish(event, relays);
     if (!results) throw new Error("Failed to publish event to relays");
 

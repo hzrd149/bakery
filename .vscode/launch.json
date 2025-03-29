@@ -21,7 +21,7 @@
       "env": {
         "DATA_PATH": "./data",
         "NODE_ENV": "development",
-        "DEBUG": "bakery,bakery:*,applesauce,applesauce:*",
+        "DEBUG": "bakery,bakery:*",
         "DEBUG_HIDE_DATE": "true",
         "DEBUG_COLORS": "true"
       }

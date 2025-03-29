@@ -8,7 +8,7 @@ export const NIP_11_SOFTWARE_URL = "git+https://github.com/hzrd149/bakery.git";
 
 export const OUTBOUND_PROXY_TYPES = ["SOCKS5", "HTTP"];
 
-export const DEFAULT_BOOTSTRAP_RELAYS = ["wss://nos.lol", "wss://relay.damus.io", "wss://relay.nostr.band"].map(
+export const DEFAULT_FALLBACK_RELAYS = ["wss://nos.lol", "wss://relay.damus.io", "wss://relay.nostr.band"].map(
   normalizeURL,
 );
 export const DEFAULT_LOOKUP_RELAYS = ["wss://purplepag.es/", "wss://user.kindpag.es/"].map(normalizeURL);
