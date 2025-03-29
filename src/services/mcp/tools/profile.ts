@@ -1,9 +1,9 @@
 import { UpdateProfile } from "applesauce-actions/actions";
 import { z } from "zod";
 
-import { ownerPublish } from "../../owner.js";
+import { ownerPublish } from "../../owner-signer.js";
 import mcpServer from "../server.js";
-import { ownerActions } from "../../owner.js";
+import { ownerActions } from "../../owner-signer.js";
 
 mcpServer.tool(
   "update_profile",

@@ -4,7 +4,7 @@ import qrcode from "qrcode-terminal";
 import { z } from "zod";
 
 import mcpServer from "../server.js";
-import { ownerAccount$, setupSigner$, startSignerSetup, stopSignerSetup } from "../../owner.js";
+import { ownerAccount$, setupSigner$, startSignerSetup, stopSignerSetup } from "../../owner-signer.js";
 import { DEFAULT_NOSTR_CONNECT_RELAYS } from "../../../const.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 import bakeryConfig from "../../config.js";

@@ -3,9 +3,6 @@ import { unixNow } from "applesauce-core/helpers";
 import { BehaviorSubject } from "rxjs";
 import { nanoid } from "nanoid";
 
-// import { logger } from "../logger.js";
-// const log = logger.extend("rx-nostr");
-
 export const rxNostr = createRxNostr({
   skipVerify: true,
   verifier: noopVerifier,

@@ -1,6 +1,6 @@
 import { ISyncEventStore } from "applesauce-core";
 import { Filter, NostrEvent, kinds } from "nostr-tools";
-import { and, eq, inArray, isNull } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import EventEmitter from "events";
 
 import { logger } from "../logger.js";
@@ -113,7 +113,7 @@ export class SQLiteEventStore extends EventEmitter<EventMap> implements ISyncEve
 
   private insertEventTags(event: NostrEvent) {
     for (let tag of event.tags) {
-      if (tag[0].length === 1) {
+      if (tag[0].length === 1 && tag[1]) {
         this.database.insert(schema.tags).values({ event: event.id, tag: tag[0], value: tag[1] }).run();
       }
     }

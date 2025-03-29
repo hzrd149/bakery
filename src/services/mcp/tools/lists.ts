@@ -2,7 +2,7 @@ import z from "zod";
 import { FollowUser, PinNote, UnfollowUser, UnpinNote } from "applesauce-actions/actions";
 
 import mcpServer from "../server.js";
-import { ownerActions, ownerPublish } from "../../owner.js";
+import { ownerActions, ownerPublish } from "../../owner-signer.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 import eventCache from "../../event-cache.js";
 

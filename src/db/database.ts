@@ -1,3 +1,5 @@
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import Database from "better-sqlite3";
@@ -12,8 +14,11 @@ const bakeryDatabase = drizzle(sqlite, { schema });
 
 export type BakeryDatabase = typeof bakeryDatabase;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // Run migrations first
-migrate(bakeryDatabase, { migrationsFolder: "./drizzle" });
+migrate(bakeryDatabase, { migrationsFolder: resolve(__dirname, "../../drizzle") });
 
 // Setup search tables after migrations
 setupEventFts(sqlite);

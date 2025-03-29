@@ -223,8 +223,8 @@ export default class App extends EventEmitter<EventMap> {
       this.gossip.interval = config.gossipInterval;
       this.gossip.broadcastRelays = config.gossipBroadcastRelays;
 
-      if (config.gossipEnabled) this.gossip.start();
-      else this.gossip.stop();
+      if (config.gossipEnabled && !this.gossip.running) this.gossip.start();
+      else if (!config.gossipEnabled && this.gossip.running) this.gossip.stop();
     });
 
     // setup PROXY switchboard

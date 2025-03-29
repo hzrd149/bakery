@@ -21,7 +21,8 @@
   },
   "files": [
     "dist",
-    "nostrudel/dist"
+    "nostrudel/dist",
+    "drizzle"
   ],
   "keywords": [
     "nostr",

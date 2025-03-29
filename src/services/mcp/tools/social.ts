@@ -7,7 +7,7 @@ import { simpleTimeout } from "applesauce-core/observable";
 import { z } from "zod";
 
 import mcpServer from "../server.js";
-import { ownerFactory, ownerPublish } from "../../owner.js";
+import { ownerFactory, ownerPublish } from "../../owner-signer.js";
 import eventCache from "../../event-cache.js";
 import { requestLoader, singleEventLoader } from "../../loaders.js";
 import { eventStore } from "../../stores.js";

@@ -4,7 +4,7 @@ import { kinds } from "nostr-tools";
 import z from "zod";
 
 import mcpServer from "../server.js";
-import { ownerFactory, ownerPublish } from "../../owner.js";
+import { ownerFactory, ownerPublish } from "../../owner-signer.js";
 import { requestLoader } from "../../loaders.js";
 import bakeryConfig from "../../config.js";
 import eventCache from "../../event-cache.js";
