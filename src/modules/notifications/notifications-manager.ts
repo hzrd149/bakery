@@ -8,7 +8,7 @@ import webPush from "web-push";
 import { logger } from "../../logger.js";
 import App from "../../app/index.js";
 import stateManager from "../../services/app-state.js";
-import bakeryConfig from "../../services/config.js";
+import bakeryConfig from "../../services/bakery-config.js";
 import { getDMRecipient, getDMSender } from "../../helpers/direct-messages.js";
 
 export type NotificationsManagerState = {

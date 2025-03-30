@@ -7,7 +7,7 @@ import mcpServer from "../server.js";
 import { ownerAccount$, setupSigner$, startSignerSetup, stopSignerSetup } from "../../owner-signer.js";
 import { DEFAULT_NOSTR_CONNECT_RELAYS } from "../../../const.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
-import bakeryConfig from "../../config.js";
+import bakeryConfig from "../../bakery-config.js";
 
 mcpServer.prompt("setup_signer", "Start the setup and connection process for the users nostr signer", async () => {
   return {

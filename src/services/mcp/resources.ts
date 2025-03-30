@@ -1,7 +1,7 @@
 import { kinds } from "nostr-tools";
 
 import mcpServer from "./server.js";
-import bakeryConfig from "../config.js";
+import bakeryConfig from "../bakery-config.js";
 
 mcpServer.resource("owner_pubkey", "pubkey://owner", async (uri) => ({
   contents: [

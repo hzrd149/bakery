@@ -18,9 +18,8 @@ export const bakeryConfigSchema = z.object({
   autoListen: z.boolean().default(false),
   logsEnabled: z.boolean().default(false),
 
-  // scrapper config
-  runReceiverOnBoot: z.boolean().default(true),
-  runScrapperOnBoot: z.boolean().default(false),
+  // receiver config
+  receiverEnabled: z.boolean().default(true),
 
   // nostr network config
   bootstrap_relays: z.array(z.string().url()).optional(),

@@ -6,6 +6,7 @@ import express, { Request } from "express";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration.js";
 import localizedFormat from "dayjs/plugin/localizedFormat.js";
+import relativeTime from "dayjs/plugin/relativeTime.js";
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import mcpServer from "./services/mcp/index.js";
@@ -23,7 +24,7 @@ import "./lifecycle.js";
 // add durations plugin
 dayjs.extend(duration);
 dayjs.extend(localizedFormat);
-
+dayjs.extend(relativeTime);
 // create app
 const app = new App();
 

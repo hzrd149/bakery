@@ -1,7 +1,7 @@
 import { Server } from "http";
 import { logger } from "../../../logger.js";
 import { getIPAddresses } from "../../../helpers/ip.js";
-import bakeryConfig from "../../../services/config.js";
+import bakeryConfig from "../../../services/bakery-config.js";
 
 import TorInbound from "./tor.js";
 import I2PInbound from "./i2p.js";

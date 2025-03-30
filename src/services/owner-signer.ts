@@ -9,7 +9,7 @@ import { eventStore } from "./stores.js";
 import { nostrConnectPublish, nostrConnectSubscription } from "../helpers/applesauce.js";
 import { NostrEvent } from "nostr-tools";
 import eventCache from "./event-cache.js";
-import bakeryConfig from "./config.js";
+import bakeryConfig from "./bakery-config.js";
 import { rxNostr } from "./rx-nostr.js";
 import { logger } from "../logger.js";
 import { NostrConnectAccount } from "applesauce-accounts/accounts";

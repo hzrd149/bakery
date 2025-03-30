@@ -1,7 +1,10 @@
 import { Observable } from "rxjs";
 import WebSocket from "ws";
 
-export type Query<T extends unknown = unknown> = (args: T, socket: WebSocket) => Observable<any>;
+export type Query<Args extends unknown = unknown, Result extends unknown = unknown> = (
+  args: Args,
+  socket: WebSocket,
+) => Observable<Result>;
 
 // open query messages (id, type, args)
 export type QueryOpen<Args extends unknown> = ["QRY", "OPEN", string, string, Args];

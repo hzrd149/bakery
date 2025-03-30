@@ -7,7 +7,7 @@ import { eventStore, queryStore } from "./services/stores.js";
 import { replaceableLoader } from "./services/loaders.js";
 import { logger } from "./logger.js";
 import { rxNostr } from "./services/rx-nostr.js";
-import bakeryConfig from "./services/config.js";
+import bakeryConfig from "./services/bakery-config.js";
 import receiver from "./services/receiver.js";
 import eventCache from "./services/event-cache.js";
 
@@ -62,7 +62,7 @@ ownerMailboxes$.subscribe((mailboxes) => {
 // Start the receiver when there is an owner and its enabled
 bakeryConfig.data$
   .pipe(
-    map((c) => c.runReceiverOnBoot),
+    map((c) => c.receiverEnabled),
     distinctUntilChanged(),
   )
   .subscribe((enabled) => {

@@ -1,5 +1,5 @@
 import mcpServer from "../server.js";
-import bakeryConfig, { bakeryConfigSchema } from "../../config.js";
+import bakeryConfig, { bakeryConfigSchema } from "../../bakery-config.js";
 
 mcpServer.tool("get_bakery_config", "Gets the current configuration for the bakery", {}, async () => {
   return { content: [{ type: "text", text: JSON.stringify(bakeryConfig.data) }] };

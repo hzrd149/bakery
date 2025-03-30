@@ -5,7 +5,7 @@ import z from "zod";
 
 import mcpServer from "../server.js";
 import { ownerFactory, ownerPublish } from "../../owner-signer.js";
-import bakeryConfig from "../../config.js";
+import bakeryConfig from "../../bakery-config.js";
 import eventCache from "../../event-cache.js";
 import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
 import { asyncLoader } from "../../loaders.js";

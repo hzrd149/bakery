@@ -5,7 +5,7 @@ import { logger } from "../../../logger.js";
 import HyperOutbound from "./hyper.js";
 import TorOutbound from "./tor.js";
 import I2POutbound from "./i2p.js";
-import bakeryConfig from "../../../services/config.js";
+import bakeryConfig from "../../../services/bakery-config.js";
 
 export default class OutboundNetworkManager {
   log = logger.extend("Network:Outbound");

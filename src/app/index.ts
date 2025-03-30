@@ -27,17 +27,15 @@ import RemoteAuthActions from "../modules/control/remote-auth-actions.js";
 import LogStore from "../modules/log-store/log-store.js";
 import DecryptionCache from "../modules/decryption-cache/decryption-cache.js";
 import DecryptionCacheActions from "../modules/control/decryption-cache.js";
-import Scrapper from "../modules/scrapper/index.js";
 import LogsActions from "../modules/control/logs-actions.js";
 import ApplicationStateManager from "../modules/application-state/manager.js";
-import ScrapperActions from "../modules/control/scrapper-actions.js";
 import InboundNetworkManager from "../modules/network/inbound/index.js";
 import OutboundNetworkManager from "../modules/network/outbound/index.js";
 import SecretsManager from "../modules/secrets-manager.js";
 import Switchboard from "../modules/switchboard/switchboard.js";
 import Gossip from "../modules/gossip.js";
 import secrets from "../services/secrets.js";
-import bakeryConfig from "../services/config.js";
+import bakeryConfig from "../services/bakery-config.js";
 import logStore from "../services/log-store.js";
 import stateManager from "../services/app-state.js";
 import eventCache from "../services/event-cache.js";
@@ -74,7 +72,6 @@ export default class App extends EventEmitter<EventMap> {
   eventStore: SQLiteEventStore;
   logStore: LogStore;
   relay: NostrRelay;
-  scrapper: Scrapper;
   control: ControlApi;
   pool: CautiousPool;
   addressBook: AddressBook;
@@ -163,12 +160,6 @@ export default class App extends EventEmitter<EventMap> {
       if (this.notifications.shouldNotify(event)) this.notifications.notify(event);
     });
 
-    this.scrapper = new Scrapper(this);
-    this.scrapper.setup();
-
-    // pass events from the scrapper to the event store
-    this.scrapper.on("event", (event) => this.eventStore.addEvent(event));
-
     // Initializes direct message manager for subscribing to DMs
     this.directMessageManager = new DirectMessageManager(this);
 
@@ -180,7 +171,6 @@ export default class App extends EventEmitter<EventMap> {
     // API for controlling the node
     this.control = new ControlApi(this);
     this.control.registerHandler(new ConfigActions(this));
-    this.control.registerHandler(new ScrapperActions(this));
     this.control.registerHandler(new DirectMessageActions(this));
     this.control.registerHandler(new NotificationActions(this));
     this.control.registerHandler(new RemoteAuthActions(this));
@@ -355,8 +345,6 @@ export default class App extends EventEmitter<EventMap> {
     this.running = true;
     await this.config.read();
 
-    if (this.config.data.runScrapperOnBoot) this.scrapper.start();
-
     this.tick();
 
     // start http server listening
@@ -380,7 +368,6 @@ export default class App extends EventEmitter<EventMap> {
   async stop() {
     this.running = false;
     this.config.write();
-    this.scrapper.stop();
     this.relay.stop();
 
     await this.inboundNetwork.stop();

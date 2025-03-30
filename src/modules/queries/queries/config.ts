@@ -1,4 +1,6 @@
 import { Query } from "../types.js";
-import bakeryConfig, { BakeryConfig } from "../../../services/config.js";
+import bakeryConfig, { BakeryConfig } from "../../../services/bakery-config.js";
 
-export const ConfigQuery: Query<BakeryConfig> = () => bakeryConfig.data$;
+const ConfigQuery: Query<BakeryConfig> = () => bakeryConfig.data$;
+
+export default ConfigQuery;

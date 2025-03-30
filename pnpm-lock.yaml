@@ -11,9 +11,6 @@ importers:
       '@diva.exchange/i2p-sam':
         specifier: ^5.4.2
         version: 5.4.2
-      '@libsql/client':
-        specifier: ^0.15.1
-        version: 0.15.1
       '@modelcontextprotocol/sdk':
         specifier: ^1.8.0
         version: 1.8.0
@@ -98,6 +95,9 @@ importers:
       nanoid:
         specifier: ^5.1.5
         version: 5.1.5
+      node-graceful-shutdown:
+        specifier: ^1.1.5
+        version: 1.1.5
       nostr-tools:
         specifier: ^2.11.0
         version: 2.11.0(typescript@5.8.2)
@@ -2985,6 +2985,10 @@ packages:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  node-graceful-shutdown@1.1.5:
+    resolution: {integrity: sha512-tlz8XpPr+pqrEGWFNLtMwd0HdFsCAKp5NCmMvwcTZTA0hyrVd7gkKbivDcSM5uYB1331/cEjNTtmVtqKy8OSBw==}
+    engines: {node: '>=6'}
+
   nodemon@3.1.9:
     resolution: {integrity: sha512-hdr1oIb2p6ZSxu3PB2JWWYS7ZQ0qvaZsc3hK8DR8f02kRzc8rjYmxAIvdz+aYC+8F2IjNaB7HMcSDg8nQpJxyg==}
     engines: {node: '>=10'}
@@ -4392,10 +4396,12 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+    optional: true
 
   '@libsql/core@0.15.1':
     dependencies:
       js-base64: 3.7.7
+    optional: true
 
   '@libsql/darwin-arm64@0.5.3':
     optional: true
@@ -4412,8 +4418,10 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+    optional: true
 
-  '@libsql/isomorphic-fetch@0.3.1': {}
+  '@libsql/isomorphic-fetch@0.3.1':
+    optional: true
 
   '@libsql/isomorphic-ws@0.1.5':
     dependencies:
@@ -4422,6 +4430,7 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+    optional: true
 
   '@libsql/linux-arm64-gnu@0.5.3':
     optional: true
@@ -4540,7 +4549,8 @@ snapshots:
       '@tybys/wasm-util': 0.9.0
     optional: true
 
-  '@neon-rs/load@0.0.4': {}
+  '@neon-rs/load@0.0.4':
+    optional: true
 
   '@noble/ciphers@0.5.3': {}
 
@@ -5741,7 +5751,8 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  data-uri-to-buffer@4.0.1: {}
+  data-uri-to-buffer@4.0.1:
+    optional: true
 
   data-uri-to-buffer@6.0.2: {}
 
@@ -5795,7 +5806,8 @@ snapshots:
 
   detect-indent@6.1.0: {}
 
-  detect-libc@2.0.2: {}
+  detect-libc@2.0.2:
+    optional: true
 
   detect-libc@2.0.3: {}
 
@@ -6122,6 +6134,7 @@ snapshots:
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 3.3.3
+    optional: true
 
   file-uri-to-path@1.0.0: {}
 
@@ -6170,6 +6183,7 @@ snapshots:
   formdata-polyfill@4.0.10:
     dependencies:
       fetch-blob: 3.2.0
+    optional: true
 
   forwarded@0.2.0: {}
 
@@ -6465,7 +6479,8 @@ snapshots:
 
   isexe@3.1.1: {}
 
-  js-base64@3.7.7: {}
+  js-base64@3.7.7:
+    optional: true
 
   js-tokens@4.0.0: {}
 
@@ -6509,6 +6524,7 @@ snapshots:
       '@libsql/linux-x64-gnu': 0.5.3
       '@libsql/linux-x64-musl': 0.5.3
       '@libsql/win32-x64-msvc': 0.5.3
+    optional: true
 
   light-bolt11-decoder@3.2.0:
     dependencies:
@@ -6824,7 +6840,8 @@ snapshots:
     dependencies:
       semver: 7.7.1
 
-  node-domexception@1.0.0: {}
+  node-domexception@1.0.0:
+    optional: true
 
   node-fetch@2.7.0:
     dependencies:
@@ -6835,6 +6852,9 @@ snapshots:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
+    optional: true
+
+  node-graceful-shutdown@1.1.5: {}
 
   nodemon@3.1.9:
     dependencies:
@@ -7015,7 +7035,8 @@ snapshots:
     dependencies:
       duplex-maker: 1.0.0
 
-  promise-limit@2.7.0: {}
+  promise-limit@2.7.0:
+    optional: true
 
   protomux@3.10.1:
     dependencies:
@@ -7773,7 +7794,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  web-streams-polyfill@3.3.3: {}
+  web-streams-polyfill@3.3.3:
+    optional: true
 
   webidl-conversions@3.0.1: {}
 

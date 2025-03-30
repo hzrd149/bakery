@@ -1,3 +1,4 @@
+import { Subject } from "rxjs";
 import { ISyncEventStore } from "applesauce-core";
 import { Filter, NostrEvent, kinds } from "nostr-tools";
 import { eq, inArray } from "drizzle-orm";
@@ -23,6 +24,8 @@ type EventMap = {
 
 export class SQLiteEventStore extends EventEmitter<EventMap> implements ISyncEventStore {
   log = logger.extend("sqlite-event-store");
+
+  inserted$ = new Subject<NostrEvent>();
 
   preserveEphemeral = false;
   keepHistory = false;
@@ -106,6 +109,7 @@ export class SQLiteEventStore extends EventEmitter<EventMap> implements ISyncEve
 
       // Emit the event
       this.emit("event:inserted", event);
+      this.inserted$.next(event);
     }
 
     return inserted;
