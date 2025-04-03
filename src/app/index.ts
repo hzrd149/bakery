@@ -14,7 +14,6 @@ import { NIP_11_SOFTWARE_URL, SENSITIVE_KINDS } from "../const.js";
 import { OWNER_PUBKEY, BAKERY_PORT } from "../env.js";
 
 import ControlApi from "../modules/control/control-api.js";
-import ConfigActions from "../modules/control/config-actions.js";
 import DirectMessageManager from "../modules/direct-message-manager.js";
 import DirectMessageActions from "../modules/control/dm-actions.js";
 import AddressBook from "../modules/address-book.js";
@@ -170,7 +169,6 @@ export default class App extends EventEmitter<EventMap> {
 
     // API for controlling the node
     this.control = new ControlApi(this);
-    this.control.registerHandler(new ConfigActions(this));
     this.control.registerHandler(new DirectMessageActions(this));
     this.control.registerHandler(new NotificationActions(this));
     this.control.registerHandler(new RemoteAuthActions(this));

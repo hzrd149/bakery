@@ -8,7 +8,7 @@ import {
 } from "applesauce-core/helpers";
 import { simpleTimeout } from "applesauce-core/observable";
 import { ReplaceableLoader, SingleEventLoader } from "applesauce-loaders/loaders";
-import { filter, firstValueFrom, map, of, OperatorFunction } from "rxjs";
+import { filter, firstValueFrom, OperatorFunction } from "rxjs";
 import { kinds } from "nostr-tools";
 
 /** Helper class for asynchronously loading event data */
