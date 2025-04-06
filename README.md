@@ -1,3 +1,3 @@
-# noStrudel Bakery
+# nostr bakery
 
-A backend for [noStrudel](https://github.com/hzrd149/noStrudel)
+I'm not sure what this is yet

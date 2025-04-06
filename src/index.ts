@@ -58,10 +58,10 @@ app.express.get("/", (req, res, next) => {
 });
 
 // serve the web ui or redirect to another hosted version
-const appDir = (await pathExists("./nostrudel/dist")) ? "./nostrudel/dist" : "./public";
-app.express.use(express.static(appDir));
+const www = "./public";
+app.express.use(express.static(www));
 app.express.get("*", (req, res) => {
-  res.sendFile(path.resolve(appDir, "index.html"));
+  res.sendFile(path.resolve(www, "index.html"));
 });
 
 // catch unhandled errors
