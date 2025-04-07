@@ -1,5 +1,5 @@
 import { filter, from, interval, map, merge, NEVER, of } from "rxjs";
-import { ZBakeryQueries } from "bakery-common";
+import { ZBakeryQueries } from "nostr-bakery-common";
 
 import QueryManager from "../modules/queries/manager.js";
 import bakeryConfig from "./bakery-config.js";

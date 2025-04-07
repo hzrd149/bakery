@@ -1,4 +1,4 @@
-import { ZBakeryConfig } from "bakery-common";
+import { ZBakeryConfig } from "nostr-bakery-common";
 
 import mcpServer from "../server.js";
 import bakeryConfig from "../../bakery-config.js";

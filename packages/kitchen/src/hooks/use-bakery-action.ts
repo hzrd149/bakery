@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
-import { TBakeryActions } from "bakery-common";
-import { runAction } from "bakery-common/client/action";
+import { TBakeryActions } from "nostr-bakery-common";
+import { runAction } from "nostr-bakery-common/client/action";
 
 import useBakery from "./use-bakery";
 

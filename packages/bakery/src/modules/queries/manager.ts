@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 import { Observable, Subject, Subscription } from "rxjs";
-import { TQueryClose, TQueryData, TQueryError, TBakeryQueries } from "bakery-common";
+import { TQueryClose, TQueryData, TQueryError, TBakeryQueries } from "nostr-bakery-common";
 import { logger } from "../../logger.js";
 
 export type BakeryQuery<T extends keyof TBakeryQueries> = (

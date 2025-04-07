@@ -66,9 +66,6 @@ importers:
       applesauce-signers:
         specifier: next
         version: 0.0.0-next-20250407103800(typescript@5.8.3)
-      bakery-common:
-        specifier: ^0.1.0
-        version: link:../common
       better-sqlite3:
         specifier: ^11.9.1
         version: 11.9.1
@@ -132,6 +129,9 @@ importers:
       node-graceful-shutdown:
         specifier: ^1.1.5
         version: 1.1.5
+      nostr-bakery-common:
+        specifier: ^0.1.0
+        version: link:../common
       nostr-tools:
         specifier: ^2.12.0
         version: 2.12.0(typescript@5.8.3)
@@ -275,15 +275,15 @@ importers:
       applesauce-signers:
         specifier: next
         version: 0.0.0-next-20250407103800(typescript@5.7.3)
-      bakery-common:
-        specifier: ^0.1.0
-        version: link:../common
       hash-sum:
         specifier: ^2.0.0
         version: 2.0.0
       nanoid:
         specifier: ^5.1.5
         version: 5.1.5
+      nostr-bakery-common:
+        specifier: ^0.1.0
+        version: link:../common
       nostr-tools:
         specifier: ^2.12.0
         version: 2.12.0(typescript@5.7.3)

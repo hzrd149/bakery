@@ -1,5 +1,5 @@
 {
-  "name": "bakery-kitchen",
+  "name": "nostr-bakery-kitchen",
   "version": "0.1.0",
   "description": "A dashboard for the nostr bakery",
   "type": "module",
@@ -14,7 +14,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "bakery-common": "^0.1.0",
+    "nostr-bakery-common": "^0.1.0",
     "@solidjs/router": "^0.15.3",
     "@types/qrcode-svg": "^1.1.5",
     "applesauce-accounts": "next",

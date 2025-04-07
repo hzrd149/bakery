@@ -1,6 +1,6 @@
 import { animals, colors, adjectives, uniqueNamesGenerator } from "unique-names-generator";
 import path from "node:path";
-import { TBakeryConfig, ZBakeryConfig } from "bakery-common";
+import { TBakeryConfig, ZBakeryConfig } from "nostr-bakery-common";
 
 import { DATA_PATH } from "../env.js";
 import { ReactiveJsonFile } from "../classes/json-file.js";

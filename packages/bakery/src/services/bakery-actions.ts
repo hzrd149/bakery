@@ -1,4 +1,4 @@
-import { TBakeryConfig } from "bakery-common";
+import { TBakeryConfig } from "nostr-bakery-common";
 
 import ActionManager from "../modules/actions/manager.js";
 import bakeryConfig from "./bakery-config.js";

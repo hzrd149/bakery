@@ -1,5 +1,5 @@
 {
-  "name": "bakery-common",
+  "name": "nostr-bakery-common",
   "version": "0.1.0",
   "description": "Common bakery utilities",
   "type": "module",

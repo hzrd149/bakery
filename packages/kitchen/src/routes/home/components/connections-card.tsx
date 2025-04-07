@@ -1,6 +1,6 @@
 import { switchMap } from "rxjs";
 import { createMemo, For, from } from "solid-js";
-import { createQuery } from "bakery-common";
+import { createQuery } from "nostr-bakery-common";
 
 import bakery$ from "../../../services/connection";
 import defined from "../../../operators/defined";

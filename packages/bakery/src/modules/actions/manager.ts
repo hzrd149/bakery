@@ -1,4 +1,4 @@
-import { TActionError, TActionResult, TBakeryActions } from "bakery-common";
+import { TActionError, TActionResult, TBakeryActions } from "nostr-bakery-common";
 import { Subject } from "rxjs";
 import WebSocket from "ws";
 

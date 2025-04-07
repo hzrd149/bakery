@@ -1,6 +1,6 @@
 import { Accessor, from } from "solid-js";
 import { switchMap } from "rxjs";
-import { createQuery, TBakeryQueries } from "bakery-common";
+import { createQuery, TBakeryQueries } from "nostr-bakery-common";
 
 import bakery$ from "../services/connection";
 import defined from "../operators/defined";

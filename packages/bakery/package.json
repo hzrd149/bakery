@@ -1,6 +1,6 @@
 {
   "name": "nostr-bakery",
-  "version": "0.1.0",
+  "version": "0.0.0-next-20250407132353",
   "description": "A headless nostr client and relay",
   "type": "module",
   "bin": "dist/index.js",
@@ -41,7 +41,7 @@
     "applesauce-loaders": "next",
     "applesauce-relay": "next",
     "applesauce-signers": "next",
-    "bakery-common": "^0.1.0",
+    "nostr-bakery-common": "^0.1.0",
     "better-sqlite3": "^11.9.1",
     "blossom-client-sdk": "^2.1.1",
     "cors": "^2.8.5",

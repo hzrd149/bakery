@@ -1,5 +1,5 @@
 import { switchMap } from "rxjs/operators";
-import { createQuery } from "bakery-common";
+import { createQuery } from "nostr-bakery-common";
 
 import defined from "../operators/defined";
 import bakery$ from "./connection";
