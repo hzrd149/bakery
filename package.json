@@ -8,7 +8,7 @@
     "format": "prettier --write .",
     "version-packages": "changeset version && pnpm install --no-frozen-lockfile && pnpm format",
     "release": "pnpm run -r build && changeset publish",
-    "prerelease-next": "turbo build && vitest run",
+    "prerelease-next": "pnpm run test",
     "release-next": "changeset version --snapshot next && changeset publish --tag next --no-git-tag && git reset --hard HEAD && git clean -fd"
   },
   "dependencies": {

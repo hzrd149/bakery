@@ -1,5 +1,5 @@
 ---
-"nostrudel-bakery": minor
+"nostr-bakery": minor
 ---
 
 Add MCP sdtio interface
