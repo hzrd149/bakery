@@ -13,8 +13,8 @@
     "mcp": "mcp-inspector node . --mcp",
     "mcp-debug": "mcp-inspector node --inspect-brk . --mcp",
     "build": "tsc",
+    "test": "vitest run --passWithNoTests",
     "generate": "drizzle-kit generate",
-    "test": "vitest run",
     "format": "prettier -w .",
     "prerelease-next": "pnpm build",
     "release-next": "changeset version --snapshot next && changeset publish --tag next --no-git-tag && git reset --hard HEAD && git clean -fd"

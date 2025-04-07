@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
-    "test": "turbo build && vitest run",
+    "test": "turbo build && vitest run --passWithNoTests",
     "coverage": "turbo build && vitest run --coverage",
     "format": "prettier --write .",
     "version-packages": "changeset version && pnpm install --no-frozen-lockfile && pnpm format",
