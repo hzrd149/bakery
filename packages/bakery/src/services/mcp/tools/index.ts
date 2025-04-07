@@ -8,3 +8,4 @@ import "./profile.js";
 import "./signer.js";
 import "./social.js";
 import "./sql.js";
+import "./messages.js";
