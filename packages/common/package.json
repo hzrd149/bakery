@@ -1,0 +1,53 @@
+{
+  "name": "bakery-common",
+  "version": "0.1.0",
+  "description": "Common bakery utilities",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch:build": "tsc --watch > /dev/null",
+    "test": "vitest run --passWithNoTests",
+    "watch:test": "vitest"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./schema": {
+      "import": "./dist/schema.js",
+      "require": "./dist/schema.js",
+      "types": "./dist/schema.d.ts"
+    },
+    "./schema/*": {
+      "import": "./dist/schema/*.js",
+      "require": "./dist/schema/*.js",
+      "types": "./dist/schema/*.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "require": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./client/*": {
+      "import": "./dist/client/*.js",
+      "require": "./dist/client/*.js",
+      "types": "./dist/client/*.d.ts"
+    }
+  },
+  "author": "hzrd149",
+  "license": "MIT",
+  "dependencies": {
+    "applesauce-relay": "0.0.0-next-20250407103800",
+    "hash-sum": "^2.0.0",
+    "nanoid": "^5.1.5",
+    "rxjs": "^7.8.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/hash-sum": "^1.0.2"
+  }
+}

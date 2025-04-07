@@ -1,0 +1,47 @@
+{
+  "name": "bakery-kitchen",
+  "version": "0.1.0",
+  "description": "A dashboard for the nostr bakery",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "bakery-common": "^0.1.0",
+    "@solidjs/router": "^0.15.3",
+    "@types/qrcode-svg": "^1.1.5",
+    "applesauce-accounts": "next",
+    "applesauce-core": "next",
+    "applesauce-factory": "next",
+    "applesauce-loaders": "next",
+    "applesauce-relay": "next",
+    "applesauce-signers": "next",
+    "hash-sum": "^2.0.0",
+    "nanoid": "^5.1.5",
+    "nostr-tools": "^2.12.0",
+    "qr-scanner": "^1.4.2",
+    "qrcode-svg": "^1.1.0",
+    "rxjs": "^7.8.2",
+    "solid-devtools": "^0.33.0",
+    "solid-js": "^1.9.5",
+    "solid-toast": "^0.5.0",
+    "tailwindcss": "^4.1.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.1",
+    "@types/hash-sum": "^1.0.2",
+    "daisyui": "^5.0.12",
+    "prettier": "^3.5.3",
+    "typescript": "~5.7.3",
+    "vite": "^6.2.4",
+    "vite-plugin-solid": "^2.11.6"
+  },
+  "packageManager": "pnpm@9.15.6"
+}
