@@ -10,23 +10,17 @@ import cors from "cors";
 
 import { logger } from "../logger.js";
 
-import { NIP_11_SOFTWARE_URL, SENSITIVE_KINDS } from "../const.js";
+import { NIP_11_SOFTWARE_URL } from "../const.js";
 import { OWNER_PUBKEY, BAKERY_PORT } from "../env.js";
 
-import ControlApi from "../modules/control/control-api.js";
 import DirectMessageManager from "../modules/direct-message-manager.js";
-import DirectMessageActions from "../modules/control/dm-actions.js";
 import AddressBook from "../modules/address-book.js";
 import NotificationsManager from "../modules/notifications/notifications-manager.js";
-import NotificationActions from "../modules/control/notification-actions.js";
 import ProfileBook from "../modules/profile-book.js";
 import ContactBook from "../modules/contact-book.js";
 import CautiousPool from "../modules/cautious-pool.js";
-import RemoteAuthActions from "../modules/control/remote-auth-actions.js";
 import LogStore from "../modules/log-store/log-store.js";
 import DecryptionCache from "../modules/decryption-cache/decryption-cache.js";
-import DecryptionCacheActions from "../modules/control/decryption-cache.js";
-import LogsActions from "../modules/control/logs-actions.js";
 import ApplicationStateManager from "../modules/application-state/manager.js";
 import InboundNetworkManager from "../modules/network/inbound/index.js";
 import OutboundNetworkManager from "../modules/network/outbound/index.js";
@@ -71,7 +65,6 @@ export default class App extends EventEmitter<EventMap> {
   eventStore: SQLiteEventStore;
   logStore: LogStore;
   relay: NostrRelay;
-  control: ControlApi;
   pool: CautiousPool;
   addressBook: AddressBook;
   profileBook: ProfileBook;
@@ -167,21 +160,6 @@ export default class App extends EventEmitter<EventMap> {
       if (config.owner) this.directMessageManager.watchInbox(config.owner);
     });
 
-    // API for controlling the node
-    this.control = new ControlApi(this);
-    this.control.registerHandler(new DirectMessageActions(this));
-    this.control.registerHandler(new NotificationActions(this));
-    this.control.registerHandler(new RemoteAuthActions(this));
-    this.control.registerHandler(new DecryptionCacheActions(this));
-
-    this.control.registerHandler(new LogsActions(this));
-
-    // connect control api to websocket server
-    this.control.attachToServer(this.wss);
-
-    // if process has an RPC interface, attach control api to it
-    if (process.send) this.control.attachToProcess(process);
-
     const connection = onConnection(this.wss);
 
     // queries
@@ -251,13 +229,6 @@ export default class App extends EventEmitter<EventMap> {
       return true;
     };
 
-    // when the owner NIP-42 authenticates with the relay pass it along to the control
-    this.relay.on("socket:auth", (ws, auth) => {
-      if (auth.pubkey === this.config.data.owner) {
-        this.control.authenticatedConnections.add(ws);
-      }
-    });
-
     // if socket is unauthenticated only allow owner's events and incoming DMs
     this.relay.registerEventHandler((ctx, next) => {
       const auth = ctx.relay.getSocketAuth(ctx.socket);
@@ -287,22 +258,22 @@ export default class App extends EventEmitter<EventMap> {
     });
 
     // block subscriptions for sensitive kinds unless NIP-42 auth or Auth Code
-    this.relay.registerSubscriptionFilter((ctx, next) => {
-      // always allow if authenticated with auth code
-      const isAuthenticatedWithAuthCode = this.control.authenticatedConnections.has(ctx.socket);
-      if (isAuthenticatedWithAuthCode) return next();
+    // this.relay.registerSubscriptionFilter((ctx, next) => {
+    //   // always allow if authenticated with auth code
+    //   const isAuthenticatedWithAuthCode = this.control.authenticatedConnections.has(ctx.socket);
+    //   if (isAuthenticatedWithAuthCode) return next();
 
-      const hasSensitiveKinds = ctx.filters.some(
-        (filter) => filter.kinds && SENSITIVE_KINDS.some((k) => filter.kinds?.includes(k)),
-      );
+    //   const hasSensitiveKinds = ctx.filters.some(
+    //     (filter) => filter.kinds && SENSITIVE_KINDS.some((k) => filter.kinds?.includes(k)),
+    //   );
 
-      if (hasSensitiveKinds) {
-        const auth = ctx.relay.getSocketAuth(ctx.socket);
-        if (!auth) throw new Error(ctx.relay.makeAuthRequiredReason("Cant view sensitive events without auth"));
-      }
+    //   if (hasSensitiveKinds) {
+    //     const auth = ctx.relay.getSocketAuth(ctx.socket);
+    //     if (!auth) throw new Error(ctx.relay.makeAuthRequiredReason("Cant view sensitive events without auth"));
+    //   }
 
-      return next();
-    });
+    //   return next();
+    // });
 
     // Handle possible additional actions when the event store receives a new message
     this.eventStore.on("event:inserted", (event) => {
