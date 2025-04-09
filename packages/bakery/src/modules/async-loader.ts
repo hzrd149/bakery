@@ -8,7 +8,7 @@ import {
 } from "applesauce-core/helpers";
 import { simpleTimeout } from "applesauce-core/observable";
 import { ReplaceableLoader, SingleEventLoader } from "applesauce-loaders/loaders";
-import { filter, firstValueFrom, OperatorFunction } from "rxjs";
+import { filter, firstValueFrom, lastValueFrom, OperatorFunction } from "rxjs";
 import { kinds } from "nostr-tools";
 
 /** Helper class for asynchronously loading event data */
@@ -50,11 +50,31 @@ export default class AsyncLoader {
       relays,
     });
 
+    // Wait for the event to be loaded
     return await firstValueFrom(
       this.store
         .replaceable(kind, pubkey, identifier)
         .pipe(this.addTimeout(`Failed to load replaceable event ${getReplaceableUID(kind, pubkey, identifier)}`)),
     );
+  }
+
+  async event(id: string, relays?: string[]) {
+    // fetch from memory
+    let existing = this.store.getEvent(id);
+    if (existing) return existing;
+
+    // load from cache
+    existing = this.cache.getEvent(id);
+    if (existing) {
+      this.store.add(existing);
+      return existing;
+    }
+
+    // Load from relays
+    this.singleLoader.next({ id, relays });
+
+    // Wait for the event to be loaded
+    return await firstValueFrom(this.store.event(id).pipe(this.addTimeout(`Failed to load event ${id}`)));
   }
 
   async profile(pubkey: string, relays?: string[]) {

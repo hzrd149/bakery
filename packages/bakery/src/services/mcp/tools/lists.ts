@@ -1,36 +1,26 @@
-import z from "zod";
-import { FollowUser, MuteUser, PinNote, UnfollowUser, UnmuteUser, UnpinNote } from "applesauce-actions/actions";
-import { kinds } from "nostr-tools";
+import { FollowUser, PinNote, UnfollowUser, UnpinNote } from "applesauce-actions/actions";
+import { getProfilePointersFromList } from "applesauce-core/helpers";
 import { markdownTable } from "markdown-table";
+import { kinds } from "nostr-tools";
+import z from "zod";
 
-import mcpServer from "../server.js";
-import { ownerActions, ownerPublish, ownerSigner } from "../../owner-signer.js";
-import { normalizeToHexPubkey } from "../../../helpers/nip19.js";
-import eventCache from "../../event-cache.js";
 import bakeryConfig from "../../bakery-config.js";
-import {
-  getHiddenMutedThings,
-  getMutedThings,
-  getProfilePointersFromList,
-  Mutes,
-  unlockHiddenTags,
-} from "applesauce-core/helpers";
+import eventCache from "../../event-cache.js";
 import { asyncLoader } from "../../loaders.js";
-import { pubkeyInput } from "../common.js";
+import { ownerActions, ownerPublish } from "../../owner-signer.js";
+import { userInput } from "../inputs.js";
+import mcpServer from "../server.js";
 
 // Follow list
 mcpServer.tool(
   "follow_user",
   "Adds another users pubkey to the following list",
   {
-    pubkey: z
-      .string()
-      .transform((hex) => normalizeToHexPubkey(hex, true))
-      .describe("The pubkey of the user to follow"),
+    user: userInput.describe("The user to follow"),
   },
-  async ({ pubkey }) => {
+  async ({ user }) => {
     try {
-      await ownerActions.exec(FollowUser, pubkey).forEach(ownerPublish);
+      await ownerActions.exec(FollowUser, user).forEach(ownerPublish);
       return { content: [{ type: "text", text: "Added user to following list" }] };
     } catch (error) {
       return { content: [{ type: "text", text: "Error following user" }] };
@@ -42,11 +32,11 @@ mcpServer.tool(
   "unfollow_user",
   "Removes another users pubkey from the following list",
   {
-    pubkey: pubkeyInput.describe("The pubkey of the user to unfollow"),
+    user: userInput.describe("The user to unfollow"),
   },
-  async ({ pubkey }) => {
+  async ({ user }) => {
     try {
-      await ownerActions.exec(UnfollowUser, pubkey).forEach(ownerPublish);
+      await ownerActions.exec(UnfollowUser, user).forEach(ownerPublish);
       return { content: [{ type: "text", text: "Removed user from following list" }] };
     } catch (error) {
       return { content: [{ type: "text", text: "Error unfollowing user" }] };

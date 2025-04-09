@@ -1,7 +1,7 @@
 import { from, tap } from "rxjs";
 import { Filter, NostrEvent } from "nostr-tools";
 import { isFromCache, markFromCache } from "applesauce-core/helpers";
-import { NostrRequest, ReplaceableLoader, SingleEventLoader } from "applesauce-loaders/loaders";
+import { DnsIdentityLoader, NostrRequest, ReplaceableLoader, SingleEventLoader } from "applesauce-loaders/loaders";
 
 import { LOOKUP_RELAYS } from "../env.js";
 import eventCache from "./event-cache.js";
@@ -21,6 +21,8 @@ function handleEvent(event: NostrEvent) {
 
   if (!isFromCache(event)) eventCache.addEvent(event);
 }
+
+export const dnsIdentityLoader = new DnsIdentityLoader();
 
 export const replaceableLoader = new ReplaceableLoader(nostrRequest, { cacheRequest, lookupRelays: LOOKUP_RELAYS });
 replaceableLoader.subscribe(handleEvent);

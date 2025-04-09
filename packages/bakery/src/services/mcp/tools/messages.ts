@@ -9,17 +9,17 @@ import bakeryConfig from "../../bakery-config.js";
 import { asyncLoader } from "../../loaders.js";
 import { ownerAccount$, ownerFactory, ownerSigner } from "../../owner-signer.js";
 import pool from "../../pool.js";
-import { pubkeyInput } from "../common.js";
 import mcpServer from "../server.js";
+import { userInput } from "../inputs.js";
 
 mcpServer.tool(
-  "send_message",
+  "send_direct_message",
   "Send a encrypted direct message to a user",
   {
-    pubkey: pubkeyInput.describe("The pubkey of the user to send the message to"),
+    user: userInput.describe("The user to send the message to"),
     message: z.string().describe("The message to send"),
   },
-  async ({ pubkey, message }) => {
+  async ({ user, message }) => {
     if (!ownerAccount$.value) return { content: [{ type: "text", text: "No nostr signer found" }] };
 
     // Create a new NIP-04 message
@@ -27,15 +27,15 @@ mcpServer.tool(
       {
         kind: kinds.EncryptedDirectMessage,
       },
-      includeSingletonTag(["p", pubkey]),
-      setEncryptedContent(pubkey, message, "nip04"),
+      includeSingletonTag(["p", user]),
+      setEncryptedContent(user, message, "nip04"),
     );
 
     // Sign the event
     const event = await ownerFactory.sign(draft);
 
     // Get users inboxes
-    const otherInboxes = await asyncLoader.inboxes(pubkey, bakeryConfig.data.lookup_relays ?? LOOKUP_RELAYS);
+    const otherInboxes = await asyncLoader.inboxes(user, bakeryConfig.data.lookup_relays ?? LOOKUP_RELAYS);
     if (otherInboxes.length === 0) {
       return {
         content: [{ type: "text", text: "The user has no DM inboxes configured" }],

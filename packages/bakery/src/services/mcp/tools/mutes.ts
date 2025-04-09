@@ -8,18 +8,18 @@ import bakeryConfig from "../../bakery-config.js";
 import eventCache from "../../event-cache.js";
 import { asyncLoader } from "../../loaders.js";
 import { ownerActions, ownerPublish, ownerSigner } from "../../owner-signer.js";
-import { pubkeyInput } from "../common.js";
 import mcpServer from "../server.js";
+import { userInput } from "../inputs.js";
 
 mcpServer.tool(
   "mute_user",
   "Add a users pubkey to the mute list",
   {
-    pubkey: pubkeyInput.describe("The pubkey of the user to mute"),
+    user: userInput.describe("The user to mute"),
     hidden: z.boolean().default(false).describe("Whether to publicly mute the user to privately"),
   },
-  async ({ pubkey }) => {
-    await ownerActions.exec(MuteUser, pubkey).forEach(ownerPublish);
+  async ({ user }) => {
+    await ownerActions.exec(MuteUser, user).forEach(ownerPublish);
     return { content: [{ type: "text", text: "Added user to mute list" }] };
   },
 );
@@ -27,11 +27,11 @@ mcpServer.tool(
   "unmute_user",
   "Remove a users pubkey from the mute list",
   {
-    pubkey: pubkeyInput.describe("The pubkey of the user to unmute"),
+    user: userInput.describe("The user to unmute"),
     hidden: z.boolean().default(false).describe("Whether to publicly unmute the user or privately"),
   },
-  async ({ pubkey }) => {
-    await ownerActions.exec(UnmuteUser, pubkey).forEach(ownerPublish);
+  async ({ user }) => {
+    await ownerActions.exec(UnmuteUser, user).forEach(ownerPublish);
     return { content: [{ type: "text", text: "Removed user from mute list" }] };
   },
 );
