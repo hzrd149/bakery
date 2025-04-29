@@ -1,4 +1,4 @@
-import { ZBakeryConfig } from "nostr-bakery-common";
+import { z } from "zod";
 
 import mcpServer from "../server.js";
 import bakeryConfig from "../../bakery-config.js";
@@ -10,7 +10,7 @@ mcpServer.tool("get_bakery_config", "Gets the current configuration for the bake
 mcpServer.tool(
   "update_bakery_config",
   "Updates the bakery config with the provided config",
-  { config: ZBakeryConfig.partial().describe("A partial config to update") },
+  { config: z.record(z.unknown()).describe("A partial config to update") },
   async ({ config }) => {
     bakeryConfig.update((data) => {
       return { ...data, ...config };

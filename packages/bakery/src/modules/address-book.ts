@@ -1,13 +1,14 @@
-import { kinds } from "nostr-tools";
-import { MailboxesQuery } from "applesauce-core/queries";
-import { getObservableValue, simpleTimeout } from "applesauce-core/observable";
 import { getInboxes, getOutboxes } from "applesauce-core/helpers";
+import { simpleTimeout } from "applesauce-core/observable";
+import { MailboxesQuery } from "applesauce-core/queries";
+import { kinds } from "nostr-tools";
 
-import { logger } from "../logger.js";
+import { firstValueFrom } from "rxjs";
 import { LOOKUP_RELAYS } from "../env.js";
+import { arrayFallback } from "../helpers/array.js";
+import { logger } from "../logger.js";
 import { replaceableLoader } from "../services/loaders.js";
 import { eventStore, queryStore } from "../services/stores.js";
-import { arrayFallback } from "../helpers/array.js";
 
 const DEFAULT_REQUEST_TIMEOUT = 10_000;
 
@@ -31,7 +32,7 @@ export default class AddressBook {
     relays = arrayFallback(relays, LOOKUP_RELAYS);
     replaceableLoader.next({ kind: kinds.RelayList, pubkey, relays, force });
 
-    return getObservableValue(
+    return firstValueFrom(
       queryStore
         .createQuery(MailboxesQuery, pubkey)
         .pipe(simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load mailboxes for ${pubkey}`)),

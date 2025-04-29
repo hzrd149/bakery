@@ -1,15 +1,15 @@
 import { IEventStore, ISyncEventStore } from "applesauce-core";
 import {
+  createReplaceableAddress,
   getInboxes,
   getOutboxes,
   getProfileContent,
   getProfilePointersFromList,
-  getReplaceableUID,
 } from "applesauce-core/helpers";
 import { simpleTimeout } from "applesauce-core/observable";
 import { ReplaceableLoader, SingleEventLoader } from "applesauce-loaders/loaders";
-import { filter, firstValueFrom, lastValueFrom, OperatorFunction } from "rxjs";
 import { kinds } from "nostr-tools";
+import { filter, firstValueFrom, OperatorFunction } from "rxjs";
 
 /** Helper class for asynchronously loading event data */
 export default class AsyncLoader {
@@ -54,7 +54,9 @@ export default class AsyncLoader {
     return await firstValueFrom(
       this.store
         .replaceable(kind, pubkey, identifier)
-        .pipe(this.addTimeout(`Failed to load replaceable event ${getReplaceableUID(kind, pubkey, identifier)}`)),
+        .pipe(
+          this.addTimeout(`Failed to load replaceable event ${createReplaceableAddress(kind, pubkey, identifier)}`),
+        ),
     );
   }
 

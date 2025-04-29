@@ -1,35 +1,12 @@
 import { NostrPublishMethod, NostrSubscriptionMethod } from "applesauce-signers";
-import { lastValueFrom, Observable } from "rxjs";
+import { lastValueFrom } from "rxjs";
 
-import { rxNostr } from "../services/rx-nostr.js";
-import { SimplePool } from "nostr-tools";
+import { onlyEvents } from "applesauce-relay";
+import pool from "../services/pool.js";
 
-const pool = new SimplePool();
-
-export const nostrConnectSubscription: NostrSubscriptionMethod = (filters, relays) => {
-  return new Observable((observer) => {
-    const sub = pool.subscribeMany(relays, filters, {
-      onevent: (event) => {
-        observer.next(event);
-      },
-    });
-
-    return () => sub.close();
-  });
-  // return new Observable((observer) => {
-  //   const req = createRxForwardReq("nostr-connect");
-
-  //   const observable = rxNostr.use(req, { on: { relays } });
-
-  //   // hack to ensure subscription is active before sending filters
-  //   const sub = observable.subscribe((p) => {
-  //     observer.next(p.event);
-  //   });
-
-  //   req.emit(filters);
-  //   return sub;
-  // });
+export const nostrConnectSubscription: NostrSubscriptionMethod = (relays, filters) => {
+  return pool.subscription(relays, filters).pipe(onlyEvents());
 };
-export const nostrConnectPublish: NostrPublishMethod = async (event, relays) => {
-  await lastValueFrom(rxNostr.send(event, { on: { relays } }));
+export const nostrConnectPublish: NostrPublishMethod = async (relays, event) => {
+  await lastValueFrom(pool.publish(relays, event));
 };

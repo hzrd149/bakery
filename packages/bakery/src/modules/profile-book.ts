@@ -1,12 +1,13 @@
-import { kinds } from "nostr-tools";
-import { getObservableValue, simpleTimeout } from "applesauce-core/observable";
+import { simpleTimeout } from "applesauce-core/observable";
 import { ProfileQuery } from "applesauce-core/queries";
+import { kinds } from "nostr-tools";
 
+import { firstValueFrom } from "rxjs";
 import { LOOKUP_RELAYS } from "../env.js";
+import { arrayFallback } from "../helpers/array.js";
 import { logger } from "../logger.js";
 import { replaceableLoader } from "../services/loaders.js";
 import { eventStore, queryStore } from "../services/stores.js";
-import { arrayFallback } from "../helpers/array.js";
 
 const DEFAULT_REQUEST_TIMEOUT = 10_000;
 
@@ -22,7 +23,7 @@ export default class ProfileBook {
     relays = arrayFallback(relays, LOOKUP_RELAYS);
     replaceableLoader.next({ kind: kinds.Metadata, pubkey, relays, force });
 
-    return getObservableValue(
+    return firstValueFrom(
       queryStore
         .createQuery(ProfileQuery, pubkey)
         .pipe(simpleTimeout(DEFAULT_REQUEST_TIMEOUT, `Failed to load profile for ${pubkey}`)),
